@@ -1,0 +1,34 @@
+{
+  "name": "benchmarks",
+  "skip_value": 7,
+  "sm_add_constant": false,
+  "dir": {
+    "data": "./data",
+    "output": "./output"
+  },
+  "models": [
+    "ransac",
+    "lreg",
+    "svr"
+  ],
+  "data": [
+    {
+      "name": "renaissance",
+      "file": "./raw_data/renaissance/ucare.log",
+      "color": "green",
+      "label": "Renaissance"
+    },
+    {
+      "name": "dacapo",
+      "file": "./raw_data/dacapo/ucare.log",
+      "color": "blue",
+      "label": "DaCapo"
+    },
+    {
+      "name": "specjvm",
+      "file": "./raw_data/specjvm/ucare.log",
+      "color": "red",
+      "label": "Specjvm2008"
+    }
+  ]
+}
