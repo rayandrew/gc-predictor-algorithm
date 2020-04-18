@@ -1,8 +1,15 @@
 from tqdm import tqdm
-
 import numpy as np
 
-import utilities
+def get_model_name(model: str):
+    if model == 'ransac':
+        return 'RANSAC Linear Regression'
+    elif model == 'lreg':
+        return 'Linear Regression'
+    elif model == 'svr':
+        return 'Support Vector Regression'
+    else:
+        return ''
 
 def prepare_trainer(config):
     def train_sm(X, y, add_constant=False):
@@ -82,76 +89,67 @@ def test_predictor(predictors, dataset):
 
     return result
 
-def generate_diff(predictors, dataset, add_sm_constant=False):
+def generate_diff(config, predictors, predictor, dataset):
     pbar = tqdm(predictors)
-    
     result = {}
-
     _dataset = dataset['predict']
-    
-    for predictor in pbar:
-        pbar.set_description('Generate diffs for {}'.format(predictor))
-        if 'lreg' in predictor and add_sm_constant:
-            pred = np.asarray(predictors[predictor].predict(sm.add_constant(_dataset[0])), dtype=float)
-        else:
-            pred = np.asarray(predictors[predictor].predict(_dataset[0]), dtype=float)
-        diffs = []
-        for i in range(len(_dataset[1].values)):
-            real = _dataset[1].values[i]
-            try:
-                pr = pred.values[i]
-            except:
-                pr = pred[i]
-            rem = (pr - real)
-            diffs.append(rem)     
-        result[predictor] = np.array(diffs)
-    return result
+
+    if 'lreg' in predictor and config['sm_add_constant']:
+        pred = np.asarray(predictors[predictor].predict(sm.add_constant(_dataset[0])), dtype=float)
+    else:
+        pred = np.asarray(predictors[predictor].predict(_dataset[0]), dtype=float)
+    diffs = []
+    for i in range(len(_dataset[1].values)):
+        real = _dataset[1].values[i]
+        try:
+            pr = pred.values[i]
+        except:
+            pr = pred[i]
+        rem = (pr - real)
+        diffs.append(rem)     
+
+    return np.array(diffs)
 
 
-def save_diff(config, output_dir, diffs):
-    pbar = tqdm(diffs)
+def save_diff(config, out_dir, predictor, diff):
+    diff_sorted_idx = np.argsort(diff, axis=0)
+    diff_sorted_idx = diff_sorted_idx[config['skip_value']:]
+        
+    with open('./{}/{}-diff-cdf.dat'.format(out_dir, predictor, diff), 'w') as f:
+        pbar = tqdm(enumerate(diff_sorted_idx))
+        for cur, idx in pbar:
+            f.write('%.10f,%.3f\n' % (float(cur / (len(diff_sorted_idx) - 1)), float(diff[idx])))
+        f.close()
+            
+    return diff_sorted_idx
 
-    cdf_dir = '{}/cdf'.format(output_dir)
-    utilities.create_dir(cdf_dir)
-    
-    for diff in diffs:
-        diff_sorted_idx = np.argsort(diff, axis=0)
-        diff_sorted_idx = diff_sorted_idx[config['skip_value']:]
+def save_plot(config, cdf_dir, gnuplot_dir, output_dir, predictor, diff, sorted_indexes):
+    import subprocess
 
-        with open('./{}/{}-diff-cdf.dat'.format(cdf_dir, diff), 'w') as f:
-            pbar_2 = tqdm(enumerate(diff_sorted_idx))
-            for cur, idx in pbar_2:
-                f.write('%.10f,%.3f\n' % (float(cur / (len(diff_sorted_idx) - 1)), float(diff[idx])))
-            f.close()
+    lower_bound = diff[sorted_indexes[0]] + 0.35
+    upper_bound = diff[sorted_indexes[-1]] + 0.35
 
-            import subprocess
-
-def save_plot(model_name, model, dataset_name, dataset, diff, diff_sorted_idx):
-    lower_bound = diff[diff_sorted_idx[0]] + 0.35
-    upper_bound = diff[diff_sorted_idx[-1]] + 0.35
-#     if upper_bound < 0.5:
-#         upper_bound = 0.5
     if (upper_bound - lower_bound) < 1.0:
         upper_bound = upper_bound + 1.0
-    print(lower_bound, upper_bound)
-#     title = ' '.join(model_name.split('_'))
-    title = '{/*1.2 Diff = Predicted GC Time - Real GC Time}'
-    if 'ransac' in model_name:
-        pred_title = '{/*0.8 RANSAC Linear Regression}'
-    else:
-        pred_title = '{/*0.8 Ordinary Linear Regresion}'
 
-    subtitle = '1 thread allocates {} chunks in while true loop. Heap size is 10MB. Experiment time is 30s. GC algorithm : Parallel Scavenge.'.format(size)
-    subtitle = '{/*0.75 ' + subtitle + '}'
-    with open('./output/{}/{}-{}-{}.plt'.format(OUTPUT_DIR, model_name, dataset_name, 'diff'), 'w') as f:
+    title = '{/*1.2 Diff = Predicted GC Time - Real GC Time}'
+
+    model_name = get_model_name(predictor)
+    pred_title = '{/*0.8' + model_name + '}'
+
+    if config['subtitle'] and config['subtitle'] != '':
+        subtitle = '\\n{/*0.75 ' + config['subtitle'] + '}'
+    else:
+        subtitle = ''
+    gnuplot_title = 'set title "{}\\n{}{}"\n'.format(title, pred_title, subtitle)
+    with open('{}/{}-{}.plt'.format(gnuplot_dir, predictor, 'diff'), 'w') as f:
         f.write('set term pos eps color solid font ",27"\n')
         f.write('set size 2,2\n')
-        f.write('set title "{}\\n{}\\n{}"\n'.format(title, pred_title, subtitle))
-#         f.write('set label "Subtitle" at screen 0.5, 0.9 font "Arial,8"\n')
+        f.write(gnuplot_title)
         f.write('set key Left\n')
         f.write('set xlabel "Predicted GC Pause - Real GC Pause (ms)"\n')
         f.write('set ylabel "CDF of differences"\n')
-        f.write('set output "./output/{}/plot/{}-{}-{}.eps"\n'.format(OUTPUT_DIR, model_name, dataset_name, 'diff'))
+        f.write('set output "{}/{}-{}.eps"\n'.format(output_dir, predictor, 'diff'))
         f.write('set key top left\n')
         f.write('set datafile separator ","\n')
         f.write('set xrange [{}:{}]\n'.format(lower_bound, upper_bound))
@@ -159,7 +157,7 @@ def save_plot(model_name, model, dataset_name, dataset, diff, diff_sorted_idx):
         f.write('set grid ytics\n')
         f.write('set grid xtics\n')
         f.write('plot \\\n')
-        f.write(' "./output/{}/cdf/{}-{}-{}-cdf.dat" u 2:1 with lines t "Diff" dt 1 lw 5 lc rgb "blue"'
-                .format(OUTPUT_DIR, model_name, dataset_name, 'diff'))
+        f.write(' "{}/{}-{}-cdf.dat" u 2:1 with lines t "Diff" dt 1 lw 5 lc rgb "blue"'
+                .format(cdf_dir, predictor, 'diff'))
         f.close()
-    subprocess.Popen('gnuplot ./output/{}/{}-{}-{}.plt'.format(OUTPUT_DIR, model_name, dataset_name, 'diff').split())
+    subprocess.Popen('gnuplot {}/{}-{}.plt'.format(gnuplot_dir, predictor, 'diff').split())

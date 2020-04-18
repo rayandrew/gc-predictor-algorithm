@@ -305,16 +305,17 @@ def main(args):
     print('Reading config')
     config = utilities.read_json_config(args.config)
     print('Starting parsing...')
-    output_dir = '{}/{}'.format(config['dir']['data'], config['name'])
+    train_type = 'main' if utilities.is_main_train(args.type) else 'stringtable'
+    output_dir = '{}/{}/{}'.format(config['dir']['data'], config['name'], train_type)
     print('Creating data directory {}'.format(output_dir))
     utilities.create_dir(output_dir)
     print('Reading raw data...')
-    pbar = tqdm(range(len(config['data'])))
+    pbar = tqdm(range(len(config['data'][train_type])))
     for index in pbar:
-        infile = config['data'][index]['file']
-        outfile = '{}/{}.csv'.format(output_dir, config['data'][index]['name'])
-        pbar.set_description('Processing raw_data in={} out={}'.format(index, infile, outfile))
+        infile = config['data'][train_type][index]['file']
+        outfile = '{}/{}.csv'.format(output_dir, config['data'][train_type][index]['name'])
+        pbar.set_description('Processing raw_data in={} out={}'.format(infile, outfile))
         parse(infile, outfile)         
 
 if __name__ == '__main__':
-    main(utilities.get_args())
+    main(utilities.get_args(True))

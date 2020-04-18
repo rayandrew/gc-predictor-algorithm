@@ -1,0 +1,42 @@
+{
+    "name": "benchmarks",
+    "skip_value": 7,
+    "sm_add_constant": false,
+    "dir": {
+        "data": "./data",
+        "output": "./output"
+    },    
+    "model": {
+        "main": {
+            "name": "ransac",
+            "file": "./output/benchmarks/train/stringtable/main/ransac.joblib"
+        },
+        "stringtable" {
+            "name": "ransac",
+            "file": "./output/benchmarks/train/stringtable/model/ransac.joblib"
+        }
+    },
+    "data": [
+        {
+            "name": "renaissance",
+            "file": "./raw_data/renaissance/ucare.log",
+            "color": "green",
+            "label": "Renaissance",
+            "subtitle": ""
+        },
+        {
+            "name": "dacapo",
+            "file": "./raw_data/dacapo/ucare.log",
+            "color": "blue",
+            "label": "DaCapo"
+            "subtitle": ""
+        },
+        {
+            "name": "specjvm",
+            "file": "./raw_data/specjvm/ucare.log",
+            "color": "red",
+            "label": "Specjvm2008",
+            "subtitle": ""
+        }
+    ]
+}

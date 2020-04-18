@@ -15,9 +15,10 @@ from model import \
     train_predictor, \
     test_predictor, \
     generate_diff, \
-    save_diff
+    save_diff, \
+    save_plot
 
-DATA_COL = [
+MAIN_DATA_COL = [
 #     'gc_id',
 #     'before_gc_live_objects',
 #     'before_gc_dead_objects',
@@ -45,11 +46,17 @@ DATA_COL = [
     'gc_time_clean'
 ]
 
-def prepare_dataset(config):
+STRINGTABLE_DATA_COL = [
+    'stringtable_size',
+    'stringtable_time',
+]
+
+
+def prepare_dataset(config, train_type, columns = MAIN_DATA_COL):
     print('Reading data')
     raw_dataset = utilities.read_data([
-        '{}/{}/{}'.format(config['dir']['data'], config['name'], data['name']) for data in config['data']
-    ], DATA_COL)
+        '{}/{}/{}/{}'.format(config['dir']['data'], config['name'], train_type, data['name']) for data in config['data'][train_type]
+    ], columns)
     dataset = pd.concat([dataset for dataset in raw_dataset])
 
     print()
@@ -92,11 +99,12 @@ def prepare_dataset(config):
 def main(args):
     print('Reading config...')
     config = utilities.read_json_config(args.config)
+    train_type = 'main' if utilities.is_main_train(args.type) else 'stringtable'
     print('Preparing output directory...')
-    output_dir = '{}/{}/train'.format(config['dir']['output'], config['name'])
+    output_dir = '{}/{}/train/{}'.format(config['dir']['output'], config['name'], train_type)
     utilities.create_dir(output_dir)
     print('Preparing dataset...')
-    dataset = prepare_dataset(config)
+    dataset = prepare_dataset(config, train_type, MAIN_DATA_COL if utilities.is_main_train(args.type) else STRINGTABLE_DATA_COL)
     print('Preparing trainers...')
     trainers = prepare_trainer(config)
     print('There are {} models that needs to be trained'.format(len(trainers)))
@@ -107,16 +115,32 @@ def main(args):
     print()
     print('Test predictors...')
     tests = test_predictor(predictors, dataset)
-    print()
-    print('Generate diffs...')
-    diffs = generate_diff(predictors, dataset)
-    print()
-    print('Saving diffs...')
-    save_diff(config, output_dir, diffs)
+
+    print('Preparing other output dirs')
+    cdf_dir = '{}/cdf'.format(output_dir)
+    gnuplot_dir = '{}/gnuplot'.format(output_dir)
+    plot_dir = '{}/plot'.format(output_dir)
+    model_dir = '{}/model'.format(output_dir)
     
-    
+    utilities.create_dir(cdf_dir)
+    utilities.create_dir(gnuplot_dir)
+    utilities.create_dir(plot_dir)
+    utilities.create_dir(model_dir)
+
+    print('Generate diff and plots...')
+
+    pbar = tqdm(predictors)
+    for predictor in pbar:
+        pbar.set_description('Generate diffs for {}'.format(predictor))
+        diff = generate_diff(config, predictors, predictor, dataset)
+        pbar.set_description('Saving diffs for {}'.format(predictor))
+        sorted_indexes = save_diff(config, cdf_dir, predictor, diff)
+        pbar.set_description('Creating plot for {}'.format(predictor))
+        save_plot(config, cdf_dir, gnuplot_dir, plot_dir, predictor, diff, sorted_indexes)
+        utilities.save('{}/{}.joblib'.format(model_dir, predictor), predictors[predictor])
+        
     
 if __name__ == '__main__':
-    main(utilities.get_args())
+    main(utilities.get_args(True))
 
 

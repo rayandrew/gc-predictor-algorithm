@@ -1,0 +1,45 @@
+{
+    "name": "benchmarks",
+    "skip_value": 7,
+    "sm_add_constant": false,
+    "dir": {
+        "data": "./data",
+        "output": "./output"
+    },
+    "models": [
+        "ransac",
+        "lreg",
+        "svr"
+    ],
+    "subtitle": "Heap Size 4G",
+    "data": {
+        "main": [
+            {
+                "name": "renaissance",
+                "file": "./raw_data/renaissance/ucare.log"
+            },
+            {
+                "name": "dacapo",
+                "file": "./raw_data/dacapo/ucare.log"
+            },
+            {
+                "name": "specjvm",
+                "file": "./raw_data/specjvm/ucare.log"
+            }
+        ],
+        "stringtable": [
+            {
+                "name": "renaissance",
+                "file": "./raw_data/renaissance/ucare.log"
+            },
+            {
+                "name": "dacapo",
+                "file": "./raw_data/dacapo/ucare.log"
+            },
+            {
+                "name": "specjvm",
+                "file": "./raw_data/specjvm/ucare.log"
+            }
+        ]
+    }
+}

@@ -7,13 +7,43 @@ import joblib
 import jsonschema
 from tqdm import tqdm
 
-config_schema =  {
-    '"type' : 'object',
+train_data_schema = {
+    'type': 'array',
+    'items': {
+        'type': 'object',
+        'properties': {
+            'name': {'type' : 'string'},
+            'file': {'type' : 'string'},
+        },
+        'required': ['name', 'file'],
+    },
+    'minItems': 1,
+}
+
+inference_data_schema = {
+    'type': 'array',
+    'items': {
+        'type': 'object',
+        'properties': {
+            'name': {'type' : 'string'},
+            'file': {'type' : 'string'},
+            'color': {'type' : 'string'},
+            'label': {'type' : 'string'},
+            'subtitle': {'type' : 'string'},
+        },
+        'required': ['name', 'file'],
+    },
+    'minItems': 1,
+}
+
+train_config_schema =  {
+    'type' : 'object',
     'properties' : {
-        'name' : {'type' : 'string'},
+        'name': {'type' : 'string'},
         'skip_value' : {'type' : 'number'},
         'sm_add_constant' : {'type' : 'boolean'},
-        'dir' : {
+        'subtitle': {'type' : 'string'},
+        'dir': {
             'type' : 'object',
             'properties': {
                 'data': {'type' : 'string'},
@@ -32,33 +62,63 @@ config_schema =  {
             'additionalItems': False,
         },
         'data': {
-            'type': 'array',
-            'items': {
-                'type': 'object',
-                'properties': {
-                    'name': {'type' : 'string'},
-                    'file': {'type' : 'string'},
-                    'color': {'type' : 'string'},
-                    'label': {'type' : 'string'},
-                },
-                'required': ['name', 'file'],
+            'type': 'object',
+            'properties': {
+                'main': data_schema,
+                'stringtable': data_schema,
             },
-            'minItems': 1,             
         },
      },
 }
 
-def read_json_config(path: str):
+inference_model_schema = {
+    'type': 'object',
+    'properties': {
+        'name': {'type' : 'string'},
+        'file': {'type' : 'string'},
+    },
+    'required': ['name', 'file'],
+}
+
+inference_config_schema = {
+    'name': {'type' : 'string'},
+    'skip_value' : {'type' : 'number'},
+    'sm_add_constant' : {'type' : 'boolean'},
+    'subtitle': {'type' : 'string'},
+    'dir': {
+        'type' : 'object',
+        'properties': {
+            'data': {'type' : 'string'},
+            'output': {'type' : 'string'},
+        },
+        'required': ['data', 'output'],
+    },
+    'models': {
+        'type': 'object',
+        'properties': {
+            'main': inference_model_schema,
+            'stringtable': inference_model_schema,
+        }
+    },
+    'data': inference_data_schema,
+}
+
+def read_json_config(path: str, train: bool = False):
     with open(path) as f:
         config = json.load(f)
-        jsonschema.validate(config, config_schema)
+        jsonschema.validate(config, train_config_schema if train else inference_config_schema)
         return config    
 
-def get_args():
+def get_args(train: bool = False):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', help='Model joblib file', required=True)
+    parser.add_argument('-c', '--config', help='Config file', required=True)
+    if train:
+        parser.add_argument('-t', '--type', help='Training type', required=True)
     args = parser.parse_args()
     return args
+
+def is_main_train(train_type: str):
+    return 'main' in train_type
 
 def read_data(csv_files, data_col, prefix = ''):
     datasets = []
