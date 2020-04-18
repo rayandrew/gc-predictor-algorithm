@@ -14,7 +14,7 @@ Created by [Ray Andrew](mailto:raydreww@gmail.com)
 | [DayTrader](https://geronimo.apache.org/GMOxDOC20/daytrader.html) | 2005 | ✓ | ✓ |
 | [ScalaBench](http://www.scalabench.org/) | 2011 | ✓ | ✓ |
 | [Renaissance]([https://renaissance.dev/](https://renaissance.dev/)) | 2019 | ✓ | ✓ |
-| [DaCapo]([http://dacapobench.org/](http://dacapobench.org/) | 2006 | ✓ | ✓ |
+| [DaCapo](http://dacapobench.org/) | 2006 | ✓ | ✓ |
 
 > Notes :
 > In this document, only Renaissance, SPECjvm2008, and DaCapo will be explained
