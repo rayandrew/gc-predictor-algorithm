@@ -22,6 +22,8 @@ nix-shell
 ### Parse
 
 ``` json
+// example: parse.json
+
 {
   "name": "benchmarks",
   "dir": {
@@ -65,6 +67,8 @@ nix-shell
 ### Training
 
 ``` json
+// example: training.json
+
 {
   "name": "benchmarks",
   "skip_value": 7,
@@ -99,7 +103,7 @@ nix-shell
 ### Inference
 
 ``` json
-// example: parse.json
+// example: inference.json
 
 {
   "name": "benchmarks",
