@@ -13,7 +13,7 @@ Created by [Ray Andrew](mailto:raydreww@gmail.com)
 | [TPC-W](http://jmob.ow2.org/tpcw.html) | 2005 | ✓ | ✓ |
 | [DayTrader](https://geronimo.apache.org/GMOxDOC20/daytrader.html) | 2005 | ✓ | ✓ |
 | [ScalaBench](http://www.scalabench.org/) | 2011 | ✓ | ✓ |
-| [Renaissance]([https://renaissance.dev/](https://renaissance.dev/)) | 2019 | ✓ | ✓ |
+| [Renaissance](https://renaissance.dev/) | 2019 | ✓ | ✓ |
 | [DaCapo](http://dacapobench.org/) | 2006 | ✓ | ✓ |
 
 > Notes :
