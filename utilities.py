@@ -7,118 +7,200 @@ import joblib
 import jsonschema
 from tqdm import tqdm
 
-train_data_schema = {
-    'type': 'array',
-    'items': {
-        'type': 'object',
-        'properties': {
-            'name': {'type' : 'string'},
-            'file': {'type' : 'string'},
-        },
-        'required': ['name', 'file'],
-    },
-    'minItems': 1,
-}
+from enum import Enum
 
-inference_data_schema = {
-    'type': 'array',
-    'items': {
-        'type': 'object',
-        'properties': {
-            'name': {'type' : 'string'},
-            'file': {'type' : 'string'},
-            'color': {'type' : 'string'},
-            'label': {'type' : 'string'},
-            'subtitle': {'type' : 'string'},
-        },
-        'required': ['name', 'file'],
-    },
-    'minItems': 1,
-}
+class Task(Enum):
+    train = 'train'
+    parse = 'parse'
+    inference = 'inference'    
 
-train_config_schema =  {
-    'type' : 'object',
-    'properties' : {
-        'name': {'type' : 'string'},
-        'skip_value' : {'type' : 'number'},
-        'sm_add_constant' : {'type' : 'boolean'},
-        'subtitle': {'type' : 'string'},
-        'dir': {
-            'type' : 'object',
-            'properties': {
-                'data': {'type' : 'string'},
-                'output': {'type' : 'string'},
+    def __str__(self):
+        return self.value
+
+class TrainType(Enum):
+    main = 'main'
+    stringtable = 'stringtable'
+
+    def __str__(self):
+        return self.value    
+
+def generate_schema(task: Task):
+    def generate_parse_schema():
+        parse_data_schema = {
+            'type': 'array',
+            'items': {
+                'type': 'object',
+                'properties': {
+                    'name': {'type' : 'string'},
+                    'file': {'type' : 'string'},
+                    'old_format': {'type': 'boolean'},
+                },
+                'required': ['name', 'file'],
             },
-            'required': ['data', 'output'],
-        },
-        'models': {
+            'minItems': 1,
+        }
+        parse_config_schema = {
+            'name': {'type' : 'string'},
+            'dir': {
+                'type' : 'object',
+                'properties': {
+                    'data': {'type' : 'string'},
+                    'output': {'type' : 'string'},
+                },
+                'required': ['data', 'output'],
+            },
+            'data': parse_data_schema,
+        }
+        return parse_config_schema
+        
+    def generate_train_schema():
+        main_data_schema = {
             'type': 'array',
             'items': {
                 'type': 'string',
-                'enum': ['ransac', 'lreg', 'svr']
+                # 'type': 'object',
+                # 'properties': {
+                #     'name': {'type' : 'string'},
+                #     'file': {'type' : 'string'},
+                # },
+                # 'required': ['name', 'file'],
             },
             'minItems': 1,
-            'maxItems': 3,
-            'additionalItems': False,
-        },
-        'data': {
+        }
+
+        stringtable_data_schema = {
+            'type': 'array',
+            'items': {
+                'type': 'string',
+                # 'type': 'object',
+                # 'properties': {
+                #     'name': {'type' : 'string'},
+                #     'file': {'type' : 'string'},
+                #     'old_format': {'type': 'boolean'},
+                # },
+                # 'required': ['name', 'file'],
+            },
+            'minItems': 1,
+        }
+        
+        train_config_schema =  {
+            'type' : 'object',
+            'properties' : {
+                'name': {'type' : 'string'},
+                'skip_value' : {'type' : 'number'},
+                'sm_add_constant' : {'type' : 'boolean'},
+                'subtitle': {'type' : 'string'},
+                'dir': {
+                    'type' : 'object',
+                    'properties': {
+                        'data': {'type' : 'string'},
+                        'output': {'type' : 'string'},
+                    },
+                    'required': ['data', 'output'],
+                },
+                'models': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'string',
+                        'enum': ['ransac', 'lreg', 'svr']
+                    },
+                    'minItems': 1,
+                    'maxItems': 3,
+                    'additionalItems': False,
+                },
+                'data': {
+                    'type': 'object',
+                    'properties': {
+                        'main': main_data_schema,
+                        'stringtable': stringtable_data_schema,
+                    },
+                },
+            },
+        }
+        return train_config_schema
+
+    def generate_inference_schema():
+        inference_data_schema = {
+            'type': 'array',
+            'items': {
+                'type': 'object',
+                'properties': {
+                    'name': {'type' : 'string'},
+                    # 'file': {'type' : 'string'},
+                    'color': {'type' : 'string'},
+                    'label': {'type' : 'string'},
+                    'subtitle': {'type' : 'string'},
+                },
+                'required': ['name'],
+            },
+            'minItems': 1,
+        }
+
+        inference_model_schema = {
             'type': 'object',
             'properties': {
-                'main': data_schema,
-                'stringtable': data_schema,
+                'name': {'type' : 'string'},
+                'file': {'type' : 'string'},
             },
-        },
-     },
-}
-
-inference_model_schema = {
-    'type': 'object',
-    'properties': {
-        'name': {'type' : 'string'},
-        'file': {'type' : 'string'},
-    },
-    'required': ['name', 'file'],
-}
-
-inference_config_schema = {
-    'name': {'type' : 'string'},
-    'skip_value' : {'type' : 'number'},
-    'sm_add_constant' : {'type' : 'boolean'},
-    'subtitle': {'type' : 'string'},
-    'dir': {
-        'type' : 'object',
-        'properties': {
-            'data': {'type' : 'string'},
-            'output': {'type' : 'string'},
-        },
-        'required': ['data', 'output'],
-    },
-    'models': {
-        'type': 'object',
-        'properties': {
-            'main': inference_model_schema,
-            'stringtable': inference_model_schema,
+            'required': ['name', 'file'],
         }
-    },
-    'data': inference_data_schema,
-}
 
-def read_json_config(path: str, train: bool = False):
+        inference_config_schema = {
+            'name': {'type' : 'string'},
+            'skip_value' : {'type' : 'number'},
+            'sm_add_constant' : {'type' : 'boolean'},
+            'subtitle': {'type' : 'string'},
+            'dir': {
+                'type' : 'object',
+                'properties': {
+                    'data': {'type' : 'string'},
+                    'output': {'type' : 'string'},
+                },
+                'required': ['data', 'output'],
+            },
+            'combined_plot': {
+                'type' : 'object',
+                'properties': {
+                    'max': {'type' : 'number'},
+                    'min': {'type' : 'number'},
+                    'subtitle': {'type': 'string'},
+                },
+                'required': ['max', 'min', 'subtitle'],
+            },
+            'models': {
+                'type': 'object',
+                'properties': {
+                    'main': inference_model_schema,
+                    'stringtable': inference_model_schema,
+                }
+            },
+            'data': inference_data_schema,
+        }
+        return inference_config_schema
+
+    if task == Task.train:
+        return generate_train_schema
+    elif task == Task.parse:
+        return generate_parse_schema
+    else:
+        return generate_inference_schema
+
+def read_json_config(path: str, task: Task = Task.parse):
     with open(path) as f:
         config = json.load(f)
-        jsonschema.validate(config, train_config_schema if train else inference_config_schema)
+        jsonschema.validate(config, generate_schema(task)())
         return config    
 
 def get_args(train: bool = False):
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config', help='Config file', required=True)
     if train:
-        parser.add_argument('-t', '--type', help='Training type', required=True)
+        parser.add_argument('-t', '--type', type=TrainType, help='Config file', required=True, choices=list(TrainType))
     args = parser.parse_args()
     return args
 
-def is_main_train(train_type: str):
-    return 'main' in train_type
+def is_main_train(train_type: TrainType = TrainType.main):
+    return train_type == TrainType.main
 
 def read_data(csv_files, data_col, prefix = ''):
     datasets = []

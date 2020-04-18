@@ -115,8 +115,8 @@ def parse_phases(line: str):
     phases = ';'.join(phases_str.split(' ')[:-1])
     return phases
 
-def parse_stringtable_time(line: str):
-    prestr = 'StringTableTime,'
+def parse_stringtable_time(line: str, old_format: bool = False):
+    prestr = 'StringTableTime],' if old_format else 'StringTableTime,'
     time_str = skip_prestr(line, prestr).rstrip(']\n')
     if ('secs' in time_str):
         time_str = time_str.replace('secs', 's')
@@ -146,7 +146,7 @@ def parse_stringtable_info(line: str):
     return result
     
 
-def parse(filename, output):
+def parse(filename, output, old_format: bool = False):
     with open(filename) as log_file:
         with open(output, 'w', newline='') as csv_file:
             writer = csv.writer(csv_file)
@@ -200,7 +200,7 @@ def parse(filename, output):
                 # elif 'phase gc_id' in line and start:
                 #     phases = parse_phases(line)
                 elif 'StringTableTime' in line and start:
-                    stringtable_time = parse_stringtable_time(line)
+                    stringtable_time = parse_stringtable_time(line, old_format)
                 elif 'StringTableInfo' in line and start:
                     stringtable_info = parse_stringtable_info(line)
 
@@ -303,19 +303,24 @@ def parse(filename, output):
 
 def main(args):
     print('Reading config')
-    config = utilities.read_json_config(args.config)
+    config = utilities.read_json_config(args.config, utilities.Task.parse)
     print('Starting parsing...')
-    train_type = 'main' if utilities.is_main_train(args.type) else 'stringtable'
-    output_dir = '{}/{}/{}'.format(config['dir']['data'], config['name'], train_type)
+    output_dir = '{}/{}'.format(config['dir']['data'], config['name'])
     print('Creating data directory {}'.format(output_dir))
     utilities.create_dir(output_dir)
     print('Reading raw data...')
-    pbar = tqdm(range(len(config['data'][train_type])))
+    threads = []
+    pbar = tqdm(range(len(config['data'])))
     for index in pbar:
-        infile = config['data'][train_type][index]['file']
-        outfile = '{}/{}.csv'.format(output_dir, config['data'][train_type][index]['name'])
+        infile = config['data'][index]['file']
+        outfile = '{}/{}.csv'.format(output_dir, config['data'][index]['name'])
         pbar.set_description('Processing raw_data in={} out={}'.format(infile, outfile))
-        parse(infile, outfile)         
+        parse(infile, outfile, config['data'][index]['old_format'] if 'old_format' in config['data'][index] else False)
 
 if __name__ == '__main__':
-    main(utilities.get_args(True))
+    import time
+    start_time = time.time()
+    main(utilities.get_args())
+    print("--- %s seconds ---" % (time.time() - start_time))
+    # Threads: --- 71.97676062583923 seconds ---
+    # No Thread : --- 64.11785078048706 seconds ---

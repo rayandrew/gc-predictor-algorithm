@@ -1,0 +1,310 @@
+{
+  "name": "benchmarks",
+  "dir": {
+    "data": "./data",
+    "output": "./output"
+  },
+  "data": [
+        {
+      "name": "1T-16MB-1",
+      "file": "./raw_data/randomize/1T-16MB/1/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "1T-16MB-1-3",
+      "file": "./raw_data/randomize/1T-16MB/1-3/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "1T-16MB-1-3-5",
+      "file": "./raw_data/randomize/1T-16MB/1-3-5/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "1T-128MB-1",
+      "file": "./raw_data/randomize/1T-128MB/1/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "1T-128MB-1-3",
+      "file": "./raw_data/randomize/1T-128MB/1-3/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "1T-128MB-1-3-5",
+      "file": "./raw_data/randomize/1T-16MB/1-3-5/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "1T-512MB-1",
+      "file": "./raw_data/randomize/1T-512MB/1/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "1T-512MB-1-3",
+      "file": "./raw_data/randomize/1T-512MB/1-3/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "1T-512MB-1-3-5",
+      "file": "./raw_data/randomize/1T-512MB/1-3-5/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "1T-1024MB-1",
+      "file": "./raw_data/randomize/1T-1024MB/1/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "1T-1024MB-1-3",
+      "file": "./raw_data/randomize/1T-1024MB/1-3/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "1T-1024MB-1-3-5",
+      "file": "./raw_data/randomize/1T-1024MB/1-3-5/ucare.log",
+      "old_format": true
+    },
+
+    {
+      "name": "4T-16MB-1",
+      "file": "./raw_data/randomize/4T-16MB/1/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "4T-16MB-1-3",
+      "file": "./raw_data/randomize/4T-16MB/1-3/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "4T-16MB-1-3-5",
+      "file": "./raw_data/randomize/4T-16MB/1-3-5/ucare.log",
+      "old_format": true
+    },
+
+    {
+      "name": "4T-128MB-1",
+      "file": "./raw_data/randomize/4T-128MB/1/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "4T-128MB-1-3",
+      "file": "./raw_data/randomize/4T-128MB/1-3/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "4T-128MB-1-3-5",
+      "file": "./raw_data/randomize/4T-16MB/1-3-5/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "4T-512MB-1",
+      "file": "./raw_data/randomize/4T-512MB/1/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "4T-512MB-1-3",
+      "file": "./raw_data/randomize/4T-512MB/1-3/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "4T-512MB-1-3-5",
+      "file": "./raw_data/randomize/4T-512MB/1-3-5/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "4T-1024MB-1",
+      "file": "./raw_data/randomize/4T-1024MB/1/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "4T-1024MB-1-3",
+      "file": "./raw_data/randomize/4T-1024MB/1-3/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "4T-1024MB-1-3-5",
+      "file": "./raw_data/randomize/4T-1024MB/1-3-5/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "16T-16MB-1",
+      "file": "./raw_data/randomize/16T-16MB/1/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "16T-16MB-1-3",
+      "file": "./raw_data/randomize/16T-16MB/1-3/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "16T-16MB-1-3-5",
+      "file": "./raw_data/randomize/16T-16MB/1-3-5/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "16T-128MB-1",
+      "file": "./raw_data/randomize/16T-128MB/1/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "16T-128MB-1-3",
+      "file": "./raw_data/randomize/16T-128MB/1-3/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "16T-128MB-1-3-5",
+      "file": "./raw_data/randomize/16T-16MB/1-3-5/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "16T-512MB-1",
+      "file": "./raw_data/randomize/16T-512MB/1/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "16T-512MB-1-3",
+      "file": "./raw_data/randomize/16T-512MB/1-3/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "16T-512MB-1-3-5",
+      "file": "./raw_data/randomize/16T-512MB/1-3-5/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "16T-1024MB-1",
+      "file": "./raw_data/randomize/16T-1024MB/1/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "16T-1024MB-1-3",
+      "file": "./raw_data/randomize/16T-1024MB/1-3/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "16T-1024MB-1-3-5",
+      "file": "./raw_data/randomize/16T-1024MB/1-3-5/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "32T-16MB-1",
+      "file": "./raw_data/randomize/32T-16MB/1/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "32T-16MB-1-3",
+      "file": "./raw_data/randomize/32T-16MB/1-3/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "32T-16MB-1-3-5",
+      "file": "./raw_data/randomize/32T-16MB/1-3-5/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "32T-128MB-1",
+      "file": "./raw_data/randomize/32T-128MB/1/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "32T-128MB-1-3",
+      "file": "./raw_data/randomize/32T-128MB/1-3/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "32T-128MB-1-3-5",
+      "file": "./raw_data/randomize/32T-16MB/1-3-5/ucare.log",
+      "old_format": true
+    },
+
+    {
+      "name": "32T-512MB-1",
+      "file": "./raw_data/randomize/32T-512MB/1/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "32T-512MB-1-3",
+      "file": "./raw_data/randomize/32T-512MB/1-3/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "32T-512MB-1-3-5",
+      "file": "./raw_data/randomize/32T-512MB/1-3-5/ucare.log",
+      "old_format": true
+    },
+
+    {
+      "name": "32T-1024MB-1",
+      "file": "./raw_data/randomize/32T-1024MB/1/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "32T-1024MB-1-3",
+      "file": "./raw_data/randomize/32T-1024MB/1-3/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "32T-1024MB-1-3-5",
+      "file": "./raw_data/randomize/32T-1024MB/1-3-5/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "1",
+      "file": "./raw_data/stringtable/1/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "1_30006",
+      "file": "./raw_data/stringtable/1_30006/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "1_120026",
+      "file": "./raw_data/stringtable/1_120026/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "2",
+      "file": "./raw_data/stringtable/2/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "2_30006",
+      "file": "./raw_data/stringtable/2_30006/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "2_120026",
+      "file": "./raw_data/stringtable/2_120026/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "3",
+      "file": "./raw_data/stringtable/3/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "3_30006",
+      "file": "./raw_data/stringtable/3_30006/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "3_120026",
+      "file": "./raw_data/stringtable/3_120026/ucare.log",
+      "old_format": true
+    },
+    {
+      "name": "renaissance",
+      "file": "./raw_data/benchmarks/renaissance/ucare.log"
+    },
+    {
+      "name": "dacapo",
+      "file": "./raw_data/benchmarks/dacapo/ucare.log"
+    },
+    {
+      "name": "specjvm",
+      "file": "./raw_data/benchmarks/specjvm/ucare.log"
+    }
+  ]
+}

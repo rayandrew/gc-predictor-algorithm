@@ -55,7 +55,7 @@ STRINGTABLE_DATA_COL = [
 def prepare_dataset(config, train_type, columns = MAIN_DATA_COL):
     print('Reading data')
     raw_dataset = utilities.read_data([
-        '{}/{}/{}/{}'.format(config['dir']['data'], config['name'], train_type, data['name']) for data in config['data'][train_type]
+        '{}/{}'.format(config['dir']['data'], data) for data in config['data'][train_type]
     ], columns)
     dataset = pd.concat([dataset for dataset in raw_dataset])
 
@@ -98,8 +98,8 @@ def prepare_dataset(config, train_type, columns = MAIN_DATA_COL):
 
 def main(args):
     print('Reading config...')
-    config = utilities.read_json_config(args.config)
-    train_type = 'main' if utilities.is_main_train(args.type) else 'stringtable'
+    config = utilities.read_json_config(args.config, utilities.Task.train)
+    train_type = str(args.type)
     print('Preparing output directory...')
     output_dir = '{}/{}/train/{}'.format(config['dir']['output'], config['name'], train_type)
     utilities.create_dir(output_dir)
@@ -137,10 +137,14 @@ def main(args):
         sorted_indexes = save_diff(config, cdf_dir, predictor, diff)
         pbar.set_description('Creating plot for {}'.format(predictor))
         save_plot(config, cdf_dir, gnuplot_dir, plot_dir, predictor, diff, sorted_indexes)
+        pbar.set_description('Saving model for {}'.format(predictor))
         utilities.save('{}/{}.joblib'.format(model_dir, predictor), predictors[predictor])
         
     
 if __name__ == '__main__':
+    import time
+    start_time = time.time()
     main(utilities.get_args(True))
+    print("--- %s seconds ---" % (time.time() - start_time))
 
 
