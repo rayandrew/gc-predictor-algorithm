@@ -74,8 +74,8 @@ def prepare_dataset(config, train_type, columns = MAIN_DATA_COL):
     print()
     print('Splitting dataset')
     splitted_dataset = train_test_split(
-        dataset.iloc[:, :-1], 
-        dataset.iloc[:, -1],
+        dataset.iloc[:, :-1].iloc[700:],
+        dataset.iloc[:, -1].iloc[700:],
         test_size=0.25, 
         random_state=42)
 
