@@ -1,5 +1,5 @@
 {
-  "name": "dacapo_stable",
+  "name": "specjvm_stable",
   "skip_value": 0,
   "sm_add_constant": false,
   "dir": {
@@ -13,7 +13,7 @@
   "subtitle": "",
   "data": {
     "main": [
-      "dacapo"
+      "specjvm"
     ],
     "stringtable": [
       "1",

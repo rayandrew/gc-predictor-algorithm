@@ -20,6 +20,7 @@ class Task(Enum):
 class TrainType(Enum):
     main = 'main'
     stringtable = 'stringtable'
+    prune = 'prune'
 
     def __str__(self):
         return self.value    
@@ -179,16 +180,16 @@ def generate_schema(task: Task):
         return inference_config_schema
 
     if task == Task.train:
-        return generate_train_schema
+        return generate_train_schema()
     elif task == Task.parse:
-        return generate_parse_schema
+        return generate_parse_schema()
     else:
-        return generate_inference_schema
+        return generate_inference_schema()
 
 def read_json_config(path: str, task: Task = Task.parse):
     with open(path) as f:
         config = json.load(f)
-        jsonschema.validate(config, generate_schema(task)())
+        jsonschema.validate(config, generate_schema(task))
         return config    
 
 def get_args(train: bool = False):
@@ -199,8 +200,8 @@ def get_args(train: bool = False):
     args = parser.parse_args()
     return args
 
-def is_main_train(train_type: TrainType = TrainType.main):
-    return train_type == TrainType.main
+# def is_main_train(train_type: TrainType = TrainType.main):
+    # return train_type == TrainType.main
 
 def read_data(csv_files, data_col, prefix = ''):
     datasets = []

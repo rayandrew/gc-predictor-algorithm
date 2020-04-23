@@ -1,0 +1,32 @@
+{
+  "name": "renaissance_stable",
+  "skip_value": 0,
+  "sm_add_constant": false,
+  "dir": {
+    "data": "./data/benchmarks",
+    "output": "./output"
+  },
+  "model": {
+    "main": {
+      "name": "ransac",
+      "file": "./output/renaissance_stable/train/main/model/ransac.joblib"
+    },
+    "stringtable": {
+      "name": "ransac",
+      "file": "./output/benchmarks/train/stringtable/model/ransac.joblib"
+    }
+  },
+  "combined_plot": {
+    "max": 100,
+    "min": -100,
+    "subtitle": "Heap Size 4G"
+  },
+  "data": [
+    {
+      "name": "renaissance",
+      "color": "blue",
+      "label": "Renaissance",
+      "subtitle": ""
+    }
+  ]
+}
