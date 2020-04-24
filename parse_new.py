@@ -15,6 +15,7 @@ CSV_COL = [
     'gc_id',
     'allocation_size',
     'phases',
+    'parallel_workers',
 
     # Oops
     'young_gen_live_objects',
@@ -48,7 +49,20 @@ CSV_COL = [
     'young_gen_gc_time',
     'old_gen_gc_time',
 
+    # old_to_young_roots_task
+    'otyrt_stripe_total',
+    'otyrt_ssize',
+    'otyrt_start_card',
+    'otyrt_end_card',
+    'otyrt_slice_width',
+    'otyrt_distance',
+    'otyrt_slice_counter',
+    'otyrt_dirty_card_counter',
+    'otyrt_objects_scanned_counter',
+    'otyrt_total_max_card_pointer_being_walked_through',
+
     # time
+    'old_to_young_roots_task_time',
     'stringtable_time',
     'prune_nmethod_time',
     'gc_time_clean',
@@ -77,12 +91,11 @@ def convert_size(line: str):
         size = size / 1000.0
     return round(size, 3)
 
-def parse_line_summaries(line: str):
+def parse_line_summaries(line: str, skip_num: int):
     new_line = line.replace(',', '')
-    infos = new_line.split()[3:]
+    infos = new_line.split()[skip_num:]
     result = {}
     for info in infos:
-        temp = {}
         # only contains two elements if splitted
         key, value, *rest = info.split('=')
         assert(len(rest) == 0)
@@ -173,12 +186,12 @@ def parse_stringtable_info(line: str):
                 result[key] = value
     return result
 
-def parse_prune_nmethod_pointer(line: str):
-    prestr = 'PruneScavengeRootNmethods'
-    prune_str = skip_prestr(line, prestr).rstrip(']\n')
-    prune_str = prune_str.replace(',', '').strip()
-    prune = int(prune_str)
-    return prune
+def parse_number(line: str, prestr: str):
+    # prestr = 'PruneScavengeRootNmethods'
+    number_str = skip_prestr(line, prestr).rstrip(']\n')
+    number_str = number_str.replace(',', '').strip()
+    number = int(number_str)
+    return number
 
 def parse(filename, output, old_format: bool = False):
     with open(filename) as log_file:
@@ -194,6 +207,7 @@ def parse(filename, output, old_format: bool = False):
             gc_time = 0.0
             allocation_size = 0.0
             phases = None
+            parallel_workers = 0
 
             need_full_gc = 0
 
@@ -213,6 +227,8 @@ def parse(filename, output, old_format: bool = False):
 
             post_scavenge_time = 0.0
             after_post_scavenge_time = 0.0
+
+            old_to_young_roots_task = None
 
             start_of_gc = False
             end_of_gc = False
@@ -241,22 +257,40 @@ def parse(filename, output, old_format: bool = False):
                         allocation_size = parse_allocation_size(line)
                     elif 'Phase gc_id' in line:
                         phases = parse_phases(line)
+                    elif 'GCParallelWorkers' in line:
+                        parallel_workers = parse_number(line, 'GCParallelWorkers')
                     elif 'StringTableTime' in line:
                         stringtable_time = parse_trace_time(line, 'StringTableTime],' if old_format else 'StringTableTime,')
                     elif 'StringTableInfo' in line:
                         stringtable_info = parse_stringtable_info(line)
                     elif 'TraceCountRootOopClosureContainer: context=YoungGen' in line:
-                        young_gen_summary = parse_line_summaries(line)
+                        young_gen_summary = parse_line_summaries(line, 3)
                     elif 'TraceCountRootOopClosureContainer: context=OldGen' in line:
-                        old_gen_summary = parse_line_summaries(line)
+                        old_gen_summary = parse_line_summaries(line, 3)
+                    elif 'OldToYoungRootsTaskGeneralInfo' in line:
+                        iterate = 0
+                        success = False
+                        while not success:
+                            try:
+                                new_old_to_young_roots_task = parse_line_summaries(line, iterate)
+                                success = True
+                            except:
+                                iterate += 1
+
+                        if old_to_young_roots_task:
+                            # compare elapsed
+                            if old_to_young_roots_task['elapsed'] < new_old_to_young_roots_task['elapsed']:
+                                old_to_young_roots_task = new_old_to_young_roots_task
+                        else:
+                            old_to_young_roots_task = new_old_to_young_roots_task
                     elif 'YoungGen size' in line:
                         young_gen_heap = parse_heap(line)
                     elif 'OldGen size' in line:
                         old_gen_heap = parse_heap(line)
                     elif 'PruneScavengeRootNmethods' in line:
-                        prune_pointer_count = parse_prune_nmethod_pointer(line)
+                        prune_pointer_count = parse_number(line, 'PruneScavengeRootNmethods')
                     elif 'PruneScavenge' in line:
-                        prune_time = parse_trace_time(line, 'PruneScavenge,')
+                        prune_time = parse_trace_time(line, 'PruneScavengeTime,')
 
                 line = log_file.readline()
 
@@ -294,11 +328,27 @@ def parse(filename, output, old_format: bool = False):
                             'used': 0.0,
                             'free': 0.0,
                         }
+                    if old_to_young_roots_task is None:
+                        old_to_young_roots_task = {
+                            'elapsed': 0,
+                            'stripe_num': 0,
+                            'stripe_total': 0,
+                            'ssize': 0,
+                            'start_card': 0,
+                            'end_card': 0,
+                            'slice_width': 0,
+                            'distance': 0,
+                            'slice_counter': 0,
+                            'dirty_card_counter': 0,
+                            'objects_scanned_counter': 0,
+                            'total_max_card_pointer_being_walked_through': 0,
+                        }
 
                     writer.writerow([
                         start_gc_id,
                         allocation_size,
                         phases,
+                        parallel_workers,
 
                         # Oops
                         young_gen_summary['live_objects'],
@@ -332,12 +382,57 @@ def parse(filename, output, old_format: bool = False):
                         young_gen_gc_time,
                         old_gen_gc_time,
 
+                        # old_to_young_roots_task
+                        old_to_young_roots_task['stripe_total'],
+                        old_to_young_roots_task['ssize'],
+                        old_to_young_roots_task['start_card'],
+                        old_to_young_roots_task['end_card'],
+                        old_to_young_roots_task['slice_width'],
+                        old_to_young_roots_task['distance'],
+                        old_to_young_roots_task['slice_counter'],
+                        old_to_young_roots_task['dirty_card_counter'],
+                        old_to_young_roots_task['objects_scanned_counter'],
+                        old_to_young_roots_task['total_max_card_pointer_being_walked_through'],
+
                         # Time
+                        old_to_young_roots_task['elapsed'],
                         stringtable_time,
                         prune_time,
-                        gc_time - stringtable_time - prune_time,
+                        gc_time - stringtable_time - prune_time - old_to_young_roots_task['elapsed'],
                         gc_time,
                     ])
+
+                    start_gc_id = -99
+                    end_gc_id = -100
+
+                    gc_time = 0.0
+                    allocation_size = 0.0
+                    phases = None
+                    parallel_workers = 0
+
+                    need_full_gc = 0
+
+                    old_gen_summary = None
+                    old_gen_gc_time = 0.0
+                    old_gen_heap = None
+
+                    young_gen_summary = None
+                    young_gen_gc_time = 0.0
+                    young_gen_heap = None
+
+                    stringtable_time = 0.0
+                    stringtable_info = None
+
+                    prune_pointer_count = 0
+                    prune_time = 0.0
+
+                    post_scavenge_time = 0.0
+                    after_post_scavenge_time = 0.0
+
+                    old_to_young_roots_task = None
+
+                    start_of_gc = False
+                    end_of_gc = False
 
             csv_file.close()
         log_file.close()

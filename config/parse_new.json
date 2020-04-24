@@ -7,7 +7,7 @@
   "data": [
     {
       "name": "renaissance",
-      "file": "./raw_data/renaissance/ucare.log"
+      "file": "./raw_data/new_parse/renaissance/ucare.log"
     }
   ]
 }
