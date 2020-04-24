@@ -28,13 +28,13 @@ CSV_COL = [
     'old_gen_roots_walk_elapsed',
 
     # Heap
-    'total_young_gen_heap',
-    'used_young_gen_heap',
-    'free_young_gen_heap',
+    'young_gen_heap_capacity',
+    'young_gen_heap_used',
+    'young_gen_heap_free',
 
-    'total_old_gen_heap',
-    'used_old_gen_heap',
-    'free_old_gen_heap',
+    'old_gen_heap_capacity',
+    'old_gen_heap_used',
+    'old_gen_heap_free',
 
     # stringtable
     'stringtable_size',
@@ -76,10 +76,10 @@ def convert_size(line: str):
     elif unit == 'B':
         size = size / 1000.0
     return round(size, 3)
-    
+
 def parse_line_summaries(line: str):
     new_line = line.replace(',', '')
-    infos = new_line.split()[1:]
+    infos = new_line.split()[3:]
     result = {}
     for info in infos:
         temp = {}
@@ -96,14 +96,22 @@ def parse_line_summaries(line: str):
                 result[key] = value
     return result
 
-def parse_heap_size(line: str):
-    total = 0.0
-    used = 0.0
-    result = re.search(HEAP_REGEX, line)
-    if result:
-        total = convert_size(result[2])
-        used = convert_size(result[3])
-    return (total, used)
+def parse_gc_id(line: str, prestr: str):
+    gc_id_str = skip_prestr(line, prestr).rstrip(']\n')
+    gc_id = int(gc_id_str)
+    return gc_id
+
+def parse_heap(line: str):
+    heap_str = line.replace(',', '')
+    heap_infos = heap_str.split()[3:]
+    result = {}
+    for info in heap_infos:
+        # only contains two elements if splitted
+        key, value, *rest = info.split('=')
+        assert(len(rest) == 0)
+        value = value.replace(']', '')
+        result[key] = convert_size(value)
+    return result
 
 def parse_gc_time(line: str, prestr = 'GC Time'):
     gc_time_str = skip_prestr(line, prestr).rstrip(']\n')
@@ -125,18 +133,24 @@ def parse_allocation_size(line: str):
     return alloc_size
 
 def parse_phases(line: str):
-    prestr = '['
-    phases_str = skip_prestr(line, prestr).rstrip(']\n')
-    phases = ';'.join(phases_str.split(' ')[:-1])
+    prestr = '{'
+    phases_str = skip_prestr(line, prestr).rstrip('} ')
+    phases = ';'.join(phases_str.split(' ')[1:-2])
     return phases
 
-def parse_stringtable_time(line: str, old_format: bool = False):
-    prestr = 'StringTableTime],' if old_format else 'StringTableTime,'
+def parse_trace_time(line: str, prestr: str):
+    gc_time = prestr in 'GC Time'
     time_str = skip_prestr(line, prestr).rstrip(']\n')
     if ('secs' in time_str):
         time_str = time_str.replace('secs', 's')
     time_str = time_str.replace(' ', '')
-    time = convert_time(time_str)
+    time = 0.0
+    if gc_time:
+        time_str = time_str.split(',')
+        assert(len(time_str) == 2)
+        time = convert_time(time_str[1])
+    else:
+        time = convert_time(time_str)
     return time
 
 def parse_stringtable_info(line: str):
@@ -146,7 +160,6 @@ def parse_stringtable_info(line: str):
     infos = info_str.split()
     result = {}
     for info in infos:
-        temp = {}
         # only contains two elements if splitted
         key, value, *rest = info.split('=')
         assert(len(rest) == 0)
@@ -159,7 +172,13 @@ def parse_stringtable_info(line: str):
             except:
                 result[key] = value
     return result
-    
+
+def parse_prune_nmethod_pointer(line: str):
+    prestr = 'PruneScavengeRootNmethods'
+    prune_str = skip_prestr(line, prestr).rstrip(']\n')
+    prune_str = prune_str.replace(',', '').strip()
+    prune = int(prune_str)
+    return prune
 
 def parse(filename, output, old_format: bool = False):
     with open(filename) as log_file:
@@ -169,81 +188,80 @@ def parse(filename, output, old_format: bool = False):
             
             line = log_file.readline()
 
-            write_summary = None
-            last_summary = None
-            summary = None
-            old_gen_summary = None
-            young_gen_summary = None
-            young_gen = None
-            old_gen = None
+            start_gc_id = -99
+            end_gc_id = -100
+
             gc_time = 0.0
-            old_gen_gc_time = 0.0
-            young_gen_gc_time = 0.0
             allocation_size = 0.0
-            start_of_gc = False
-            write_csv_row = False
+            phases = None
+
+            need_full_gc = 0
+
+            old_gen_summary = None
+            old_gen_gc_time = 0.0
+            old_gen_heap = None
+
+            young_gen_summary = None
+            young_gen_gc_time = 0.0
+            young_gen_heap = None
+
             stringtable_time = 0.0
             stringtable_info = None
 
-            start = False
+            prune_pointer_count = 0
+            prune_time = 0.0
 
-            count = 0
-            
+            post_scavenge_time = 0.0
+            after_post_scavenge_time = 0.0
+
+            start_of_gc = False
+            end_of_gc = False
+
             while line:
-                if line.startswith('  summaries: context=OldGen'):
-                    old_gen_summary = parse_line_summaries(line)
-                elif line.startswith('  summaries: context=YoungGen'):
-                    young_gen_summary = parse_line_summaries(line)            
-                elif line.startswith('  summaries:'):
-                    summary = parse_line_summaries(line)
-                    count += 1
-                else:
-                    summary = None
+                # [YoungGen size, capacity=1388314624B used=1372782672B free=1000B]
 
-                if line.startswith(' PSYoungGen'):
-                    young_gen = parse_heap_size(line)
-                elif line.startswith(' ParOldGen'):
-                    old_gen = parse_heap_size(line)
-                elif 'GC Time' in line:
-                    gc_time = parse_gc_time(line)
-                elif 'OldGenTime' in line and start:
-                    old_gen_gc_time = parse_gc_time(line, 'OldGenTime')
-                elif 'YoungGenTime' in line and start:
-                    young_gen_gc_time = parse_gc_time(line, 'YoungGenTime')
-                elif 'Mem allocate size' in line and start:
-                    allocation_size = parse_allocation_size(line)
-                # elif 'phase gc_id' in line and start:
-                #     phases = parse_phases(line)
-                elif 'StringTableTime' in line and start:
-                    stringtable_time = parse_stringtable_time(line, old_format)
-                elif 'StringTableInfo' in line and start:
-                    stringtable_info = parse_stringtable_info(line)
+                if not start_of_gc and 'GC Start' in line:
+                    start_of_gc = True
+                    end_of_gc = False
+                    start_gc_id = parse_gc_id(line, 'GC Start id=')
+
+                if start_of_gc and not end_of_gc:
+                    if 'GC Finish' in line:
+                        end_gc_id = parse_gc_id(line, 'GC Finish id=')
+                        if end_gc_id == start_gc_id:
+                            end_of_gc = True
+                            start_of_gc = False
+                    elif 'GC Time' in line:
+                        gc_time = parse_trace_time(line, 'GC Time')
+                    elif 'OldGenTime' in line:
+                        old_gen_gc_time = parse_gc_time(line, 'OldGenTime')
+                    elif 'YoungGenTime' in line:
+                        young_gen_gc_time = parse_gc_time(line, 'YoungGenTime')
+                    elif 'Mem allocate size' in line:
+                        allocation_size = parse_allocation_size(line)
+                    elif 'Phase gc_id' in line:
+                        phases = parse_phases(line)
+                    elif 'StringTableTime' in line:
+                        stringtable_time = parse_trace_time(line, 'StringTableTime],' if old_format else 'StringTableTime,')
+                    elif 'StringTableInfo' in line:
+                        stringtable_info = parse_stringtable_info(line)
+                    elif 'TraceCountRootOopClosureContainer: context=YoungGen' in line:
+                        young_gen_summary = parse_line_summaries(line)
+                    elif 'TraceCountRootOopClosureContainer: context=OldGen' in line:
+                        old_gen_summary = parse_line_summaries(line)
+                    elif 'YoungGen size' in line:
+                        young_gen_heap = parse_heap(line)
+                    elif 'OldGen size' in line:
+                        old_gen_heap = parse_heap(line)
+                    elif 'PruneScavengeRootNmethods' in line:
+                        prune_pointer_count = parse_prune_nmethod_pointer(line)
+                    elif 'PruneScavenge' in line:
+                        prune_time = parse_trace_time(line, 'PruneScavenge,')
 
                 line = log_file.readline()
 
-                # if summary and summary['context'] == 'AfterGC':
-                #     if last_summary:
-                #         print('LAST_SUM', last_summary['gc_id'])
-                #     print('SUM', summary['gc_id'])
-
-                if summary is not None:
-                    if last_summary is not None:
-                        if summary['context'] == 'AfterGC':
-                        # if summary['gc_id'] != last_summary['gc_id']:
-                            write_summary = last_summary
-                            write_csv_row = True
-                            start = False
-                    if summary['context'] == 'BeforeGC':
-                        start = True
-                        last_summary = summary
-                        write_csv_row = False
-                        # write_csv_row = False
-
-                # if write_summary:
-                #     print('WRITE', write_summary['gc_id'])
-
-                if write_csv_row and write_summary is not None:
-                    write_csv_row = False
+                if end_of_gc:
+                    end_of_gc = False
                     if young_gen_summary is None:
                         young_gen_summary = {
                             'live_objects': 0,
@@ -264,54 +282,62 @@ def parse(filename, output, old_format: bool = False):
                             'processed': 0.0,
                             'removed': 0.0,
                         }
+                    if young_gen_heap is None:
+                        young_gen_heap = {
+                            'capacity': 0.0,
+                            'used': 0.0,
+                            'free': 0.0,
+                        }
+                    if old_gen_heap is None:
+                        old_gen_heap = {
+                            'capacity': 0.0,
+                            'used': 0.0,
+                            'free': 0.0,
+                        }
+
                     writer.writerow([
-                        write_summary['gc_id'],
-                        write_summary['live_objects'],
-                        write_summary['dead_objects'],
-                        write_summary['total_objects'],
-                        write_summary['elapsed'],
+                        start_gc_id,
                         allocation_size,
+                        phases,
+
+                        # Oops
                         young_gen_summary['live_objects'],
                         young_gen_summary['dead_objects'],
                         young_gen_summary['total_objects'],
                         young_gen_summary['elapsed'],
-                        young_gen[0],
-                        young_gen[1],
+
                         old_gen_summary['live_objects'],
                         old_gen_summary['dead_objects'],
                         old_gen_summary['total_objects'],
                         old_gen_summary['elapsed'],
-                        old_gen[0],
-                        old_gen[1],
-                        # phases,
+
+                        # Heap
+                        young_gen_heap['capacity'],
+                        young_gen_heap['used'],
+                        young_gen_heap['free'],
+
+                        old_gen_heap['capacity'],
+                        old_gen_heap['used'],
+                        old_gen_heap['free'],
+
+                        # Stringtable
                         stringtable_info['table_size'],
                         stringtable_info['processed'],
                         stringtable_info['removed'],
-                        stringtable_time,
+
+                        # Prune
+                        prune_pointer_count,
+
+                        # Gen time
                         young_gen_gc_time,
                         old_gen_gc_time,
+
+                        # Time
+                        stringtable_time,
+                        prune_time,
+                        gc_time - stringtable_time - prune_time,
                         gc_time,
-                        gc_time - stringtable_time,
                     ])
-                    summary = None
-                    write_summary = None
-                    last_summary = None
-                    write_summary = None
-                    last_summary = None
-                    summary = None
-                    old_gen_summary = None
-                    young_gen_summary = None
-                    young_gen = None
-                    old_gen = None
-                    gc_time = 0.0
-                    old_gen_gc_time = 0.0
-                    young_gen_gc_time = 0.0
-                    allocation_size = 0.0
-                    start_of_gc = False
-                    write_csv_row = False
-                    # phases = None
-                    stringtable_time = 0.0
-                    stringtable_info = None
 
             csv_file.close()
         log_file.close()

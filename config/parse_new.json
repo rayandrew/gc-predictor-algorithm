@@ -1,0 +1,13 @@
+{
+  "name": "new_parse",
+  "dir": {
+    "data": "./data",
+    "output": "./output"
+  },
+  "data": [
+    {
+      "name": "renaissance",
+      "file": "./raw_data/renaissance/ucare.log"
+    }
+  ]
+}

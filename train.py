@@ -18,19 +18,21 @@ from model import \
     save_diff, \
     save_plot
 
-def prepare_dataset(config, train_type, columns = MAIN_DATA_COL):
+def prepare_dataset(config, train_type, columns):
     print('Reading data')
     raw_dataset = utilities.read_data([
         '{}/{}'.format(config['dir']['data'], data) for data in config['data'][train_type]
     ], columns)
     dataset = pd.concat([dataset for dataset in raw_dataset])
 
-    if 'specjvm' in config['name']:
-        dataset = dataset.iloc[1000:2000]
-    elif 'renaissance' in config['name']:
-        dataset = dataset.iloc[2200:3500]
-    elif 'dacapo' in config['name']:
-        dataset = dataset.iloc[1000:2000]
+    if train_type == 'main':
+        if 'specjvm' in config['name']:
+            dataset = dataset.iloc[1000:2000]
+        elif 'renaissance' in config['name']:
+            # dataset = dataset.iloc[1500:]
+            dataset = dataset.iloc[1500:][dataset['gc_time_clean'] < 1500]
+        elif 'dacapo' in config['name']:
+            dataset = dataset.iloc[1000:2000]
 
     print()
     print('Data summaries')
@@ -72,30 +74,9 @@ def prepare_dataset(config, train_type, columns = MAIN_DATA_COL):
 def get_data_col(train_type: utilities.TrainType):
     def get_main_data_col():
         MAIN_DATA_COL = [
-        #     'gc_id',
-        #     'before_gc_live_objects',
-        #     'before_gc_dead_objects',
-        #     'before_gc_total_objects',
-        #     'before_gc_roots_walk_elapsed',
             'allocation_size',
-        #     'young_gen_live_objects',
-        #     'young_gen_dead_objects',
             'young_gen_total_objects',
-        #     'young_gen_roots_walk_elapsed',
-        #     'total_young_gen_heap',
-        #     'used_young_gen_heap',
-        #     'old_gen_live_objects',
-        #     'old_gen_dead_objects',
-        #     'old_gen_total_objects',
-        #     'old_gen_roots_walk_elapsed',
-        #     'total_old_gen_heap',
-        #     'used_old_gen_heap',
-        #     'phases',
-        #     'stringtable_time',
-        #     'stringtable_size',
-        #     'stringtable_processed',
-        #     'stringtable_removed',
-        #     'gc_time',
+            # 'young_gen_heap_free',
             'gc_time_clean'
         ]
         return MAIN_DATA_COL
@@ -109,9 +90,9 @@ def get_data_col(train_type: utilities.TrainType):
 
     def get_prune_data_col():
         PRUNE_DATA_COL = [
-            ''
+            'prune_nmethod_pointer_count',
+            'prune_nmethod_time',
         ]
-
         return PRUNE_DATA_COL
 
     if train_type == utilities.TrainType.main:

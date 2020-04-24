@@ -2,14 +2,19 @@
   "name": "renaissance_stable",
   "skip_value": 0,
   "sm_add_constant": false,
+  "new_version": true,
   "dir": {
-    "data": "./data/benchmarks",
+    "data": "./data/new_parse",
     "output": "./output"
   },
   "model": {
     "main": {
       "name": "ransac",
       "file": "./output/renaissance_stable/train/main/model/ransac.joblib"
+    },
+    "prune": {
+      "name": "ransac",
+      "file": "./output/renaissance_stable/train/prune/model/ransac.joblib"
     },
     "stringtable": {
       "name": "ransac",
