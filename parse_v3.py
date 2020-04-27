@@ -59,10 +59,11 @@ CSV_COL = [
     'otyrt_slice_counter',
     'otyrt_dirty_card_counter',
     'otyrt_objects_scanned_counter',
+    'otyrt_card_increment_counter',
     'otyrt_total_max_card_pointer_being_walked_through',
 
     # time
-    'old_to_young_roots_task_time',
+    'otyrt_time',
     'stringtable_time',
     'prune_nmethod_time',
     'gc_time_clean',
@@ -341,6 +342,7 @@ def parse(filename, output, old_format: bool = False):
                             'slice_counter': 0,
                             'dirty_card_counter': 0,
                             'objects_scanned_counter': 0,
+                            'card_increment_counter': 0,
                             'total_max_card_pointer_being_walked_through': 0,
                         }
 
@@ -392,6 +394,7 @@ def parse(filename, output, old_format: bool = False):
                         old_to_young_roots_task['slice_counter'],
                         old_to_young_roots_task['dirty_card_counter'],
                         old_to_young_roots_task['objects_scanned_counter'],
+                        old_to_young_roots_task['card_increment_counter'],
                         old_to_young_roots_task['total_max_card_pointer_being_walked_through'],
 
                         # Time

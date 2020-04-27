@@ -1,9 +1,9 @@
 {
-  "name": "specjvm_stable",
+  "name": "specjvm_single_old",
   "skip_value": 0,
   "sm_add_constant": false,
   "dir": {
-    "data": "./data/benchmarks",
+    "data": "./data/new_parse_bak",
     "output": "./output"
   },
   "models": [
@@ -25,6 +25,12 @@
       "3",
       "3_30006",
       "3_120026"
+    ],
+    "prune": [
+      "specjvm"
+    ],
+    "otyrt": [
+      "specjvm"
     ]
   }
 }

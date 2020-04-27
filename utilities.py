@@ -21,6 +21,7 @@ class TrainType(Enum):
     main = 'main'
     stringtable = 'stringtable'
     prune = 'prune'
+    otyrt = 'otyrt'
 
     def __str__(self):
         return self.value    
@@ -94,6 +95,7 @@ def generate_schema(task: Task):
                         'main': data_schema,
                         'stringtable': data_schema,
                         'prune': data_schema,
+                        'otyrt': data_schema,
                     },
                 },
             },
@@ -154,6 +156,7 @@ def generate_schema(task: Task):
                     'main': inference_model_schema,
                     'stringtable': inference_model_schema,
                     'prune': inference_model_schema,
+                    'otyrt': inference_model_schema,
                 }
             },
             'data': inference_data_schema,

@@ -1,8 +1,7 @@
 {
-  "name": "renaissance_stable",
+  "name": "combined_training",
   "skip_value": 0,
   "sm_add_constant": false,
-  "new_version": true,
   "dir": {
     "data": "./data/new_parse",
     "output": "./output"
@@ -10,11 +9,15 @@
   "model": {
     "main": {
       "name": "ransac",
-      "file": "./output/renaissance_stable/train/main/model/ransac.joblib"
+      "file": "./output/combined_training/train/main/model/ransac.joblib"
     },
     "prune": {
       "name": "ransac",
-      "file": "./output/renaissance_stable/train/prune/model/ransac.joblib"
+      "file": "./output/combined_training/train/prune/model/ransac.joblib"
+    },
+    "otyrt": {
+      "name": "ransac",
+      "file": "./output/combined_training/train/otyrt/model/ransac.joblib"
     },
     "stringtable": {
       "name": "ransac",
@@ -29,8 +32,20 @@
   "data": [
     {
       "name": "renaissance",
-      "color": "blue",
+      "color": "green",
       "label": "Renaissance",
+      "subtitle": ""
+    },
+    {
+      "name": "dacapo",
+      "color": "blue",
+      "label": "DaCapo",
+      "subtitle": ""
+    },
+    {
+      "name": "specjvm",
+      "color": "red",
+      "label": "Specjvm2008",
       "subtitle": ""
     }
   ]

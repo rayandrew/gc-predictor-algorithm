@@ -1,0 +1,21 @@
+{
+  "name": "new_parse_bak",
+  "dir": {
+    "data": "./data",
+    "output": "./output"
+  },
+  "data": [
+    {
+      "name": "renaissance",
+      "file": "./raw_data/new_parse_bak/renaissance/ucare.log"
+    },
+    {
+      "name": "dacapo",
+      "file": "./raw_data/new_parse_bak/dacapo/ucare.log"
+    },
+    {
+      "name": "specjvm",
+      "file": "./raw_data/new_parse_bak/specjvm/ucare.log"
+    }
+  ]
+}

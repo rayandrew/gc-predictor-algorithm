@@ -1,15 +1,23 @@
 {
-  "name": "dacapo_stable",
+  "name": "dacapo_single_stable",
   "skip_value": 0,
   "sm_add_constant": false,
   "dir": {
-    "data": "./data/benchmarks",
+    "data": "./data/new_parse",
     "output": "./output"
   },
   "model": {
     "main": {
       "name": "ransac",
-      "file": "./output/dacapo_stable/train/main/model/ransac.joblib"
+      "file": "./output/dacapo_single_stable/train/main/model/ransac.joblib"
+    },
+    "prune": {
+      "name": "ransac",
+      "file": "./output/dacapo_single_stable/train/prune/model/ransac.joblib"
+    },
+    "otyrt": {
+      "name": "ransac",
+      "file": "./output/dacapo_single_stable/train/otyrt/model/ransac.joblib"
     },
     "stringtable": {
       "name": "ransac",

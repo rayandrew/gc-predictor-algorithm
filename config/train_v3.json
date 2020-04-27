@@ -1,0 +1,41 @@
+{
+  "name": "combined_training",
+  "skip_value": 0,
+  "sm_add_constant": false,
+  "dir": {
+    "data": "./data/new_parse",
+    "output": "./output"
+  },
+  "models": [
+    "ransac",
+    "lreg"
+  ],
+  "subtitle": "",
+  "data": {
+    "main": [
+      "renaissance",
+      "specjvm",
+      "dacapo"
+    ],
+    "stringtable": [
+      "1",
+      "1_30006",
+      "1_120026",
+      "2",
+      "2_30006",
+      "2_120026",
+      "3",
+      "3_30006",
+      "3_120026"
+    ],
+    "prune": [
+      "renaissance",
+      "specjvm"
+    ],
+    "otyrt": [
+      "renaissance",
+      "specjvm",
+      "dacapo"
+    ]
+  }
+}

@@ -41,7 +41,7 @@ def prepare_dataset(config, train_type, columns):
     print()
     print('Prepare dataset to predict')
     pred_dataset = (dataset.iloc[:, :-1], dataset.iloc[:, -1])
-    
+
     print()
     print('Create cleaned dataset')
     clean_dataset = utilities.clean_data(dataset)
@@ -51,15 +51,15 @@ def prepare_dataset(config, train_type, columns):
     splitted_dataset = train_test_split(
         dataset.iloc[:, :-1],
         dataset.iloc[:, -1],
-        test_size=0.25, 
+        test_size=0.25,
         random_state=42)
 
     print()
     print('Splitting cleaned dataset')
     splitted_cleaned_dataset = train_test_split(
-        clean_dataset.iloc[:, :-1], 
+        clean_dataset.iloc[:, :-1],
         clean_dataset.iloc[:, -1],
-        test_size=0.25, 
+        test_size=0.25,
         random_state=42)
 
     return {
@@ -127,7 +127,7 @@ def main(args):
     gnuplot_dir = '{}/gnuplot'.format(output_dir)
     plot_dir = '{}/plot'.format(output_dir)
     model_dir = '{}/model'.format(output_dir)
-    
+
     utilities.create_dir(cdf_dir)
     utilities.create_dir(gnuplot_dir)
     utilities.create_dir(plot_dir)
@@ -145,12 +145,10 @@ def main(args):
         save_plot(config, cdf_dir, gnuplot_dir, plot_dir, predictor, diff, sorted_indexes)
         pbar.set_description('Saving model for {}'.format(predictor))
         utilities.save('{}/{}.joblib'.format(model_dir, predictor), predictors[predictor])
-        
+
     
 if __name__ == '__main__':
     import time
     start_time = time.time()
     main(utilities.get_args(True))
     print("--- %s seconds ---" % (time.time() - start_time))
-
-

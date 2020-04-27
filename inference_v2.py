@@ -116,10 +116,10 @@ def save_plots(config, cdf_dir: str, gnuplot_dir: str, output_dir: str):
     output_name = '{}-combined'.format(config['name'])
     config_combined = config['combined_plot']
     config_model = config['model']
-    
+
     title = '{/*1.2 Diff = Predicted GC Time - Real GC Time}'
     pred_title = '{/*0.8 MainModel = ' + config_model['main']['name'] + ', StringTableModel = ' + config_model['stringtable']['name'] + '}'
-    
+
     subtitle = ''
     if 'subtitle' in config_combined:
         subtitle = config_combined['subtitle']
@@ -148,7 +148,7 @@ def save_plots(config, cdf_dir: str, gnuplot_dir: str, output_dir: str):
         for file_idx in range(len(config['data'])):
             data_config = config['data'][file_idx]
             data_name = data_config['name']
-            data_label = data_config['label'] if 'label' in data_config else dataset_name 
+            data_label = data_config['label'] if 'label' in data_config else dataset_name
             data_color = data_config['color']
             if file_idx == 0:
                 f.write('    "{}/{}-diff-cdf.dat" u 2:1 with lines t "{}" dt 1 lw 6 lc rgb "{}", \\\n'
@@ -179,11 +179,11 @@ def main(args):
     cdf_dir = '{}/cdf'.format(output_dir)
     gnuplot_dir = '{}/gnuplot'.format(output_dir)
     plot_dir = '{}/plot'.format(output_dir)
-    
+
     utilities.create_dir(cdf_dir)
     utilities.create_dir(gnuplot_dir)
     utilities.create_dir(plot_dir)
-    
+
     pbar = tqdm(range(len(datasets)))
     for idx in pbar:
         name = config['data'][idx]['name']
@@ -198,7 +198,6 @@ def main(args):
 
     print('Saving combined plot')
     save_plots(config, cdf_dir, gnuplot_dir, plot_dir)
-        
+
 if __name__ == '__main__':
     main(utilities.get_args())
-    
