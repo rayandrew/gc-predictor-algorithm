@@ -1,5 +1,5 @@
 {
-  "name": "new_parse",
+  "name": "single_thread_512M",
   "dir": {
     "data": "./data",
     "output": "./output"
@@ -7,15 +7,7 @@
   "data": [
     {
       "name": "renaissance",
-      "file": "./raw_data/new_parse/renaissance/ucare.log"
-    },
-    {
-      "name": "dacapo",
-      "file": "./raw_data/new_parse/dacapo/ucare.log"
-    },
-    {
-      "name": "specjvm",
-      "file": "./raw_data/new_parse/specjvm/ucare.log"
+      "file": "./raw_data/single_gc_thread_512/renaissance/ucare.log"
     }
   ]
 }

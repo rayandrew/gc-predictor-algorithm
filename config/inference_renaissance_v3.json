@@ -1,28 +1,28 @@
 {
-  "name": "renaissance_stable",
+  "name": "single_thread_512M",
   "skip_value": 0,
   "sm_add_constant": false,
   "new_version": true,
   "dir": {
-    "data": "./data/new_parse",
+    "data": "./data/single_thread_512M",
     "output": "./output"
   },
   "model": {
     "main": {
       "name": "ransac",
-      "file": "./output/renaissance_stable/train/main/model/ransac.joblib"
+      "file": "./output/single_thread_512M/train/main/model/ransac.joblib"
     },
     "prune": {
       "name": "ransac",
-      "file": "./output/renaissance_stable/train/prune/model/ransac.joblib"
+      "file": "./output/single_thread_512M/train/prune/model/ransac.joblib"
     },
     "otyrt": {
       "name": "ransac",
-      "file": "./output/renaissance_stable/train/otyrt/model/ransac.joblib"
+      "file": "./output/single_thread_512M/train/otyrt/model/ransac.joblib"
     },
     "stringtable": {
       "name": "ransac",
-      "file": "./output/benchmarks/train/stringtable/model/ransac.joblib"
+      "file": "./output/new_stringtable/model/ransac.joblib"
     }
   },
   "combined_plot": {
