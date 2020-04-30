@@ -1,0 +1,13 @@
+{
+  "name": "single_thread_512M",
+  "dir": {
+    "data": "./data",
+    "output": "./output"
+  },
+  "data": [
+    {
+      "name": "renaissance",
+      "file": "./raw_data/single_gc_thread_512/renaissance/ucare.log"
+    }
+  ]
+}

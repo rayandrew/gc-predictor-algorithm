@@ -1,15 +1,24 @@
 {
-  "name": "renaissance_stable",
+  "name": "renaissance_old",
   "skip_value": 0,
   "sm_add_constant": false,
+  "new_version": true,
   "dir": {
-    "data": "./data/benchmarks",
+    "data": "./data/new_parse_bak",
     "output": "./output"
   },
   "model": {
     "main": {
       "name": "ransac",
-      "file": "./output/renaissance_stable/train/main/model/ransac.joblib"
+      "file": "./output/renaissance_old/train/main/model/ransac.joblib"
+    },
+    "prune": {
+      "name": "ransac",
+      "file": "./output/renaissance_old/train/prune/model/ransac.joblib"
+    },
+    "otyrt": {
+      "name": "ransac",
+      "file": "./output/renaissance_stable/train/otyrt/model/ransac.joblib"
     },
     "stringtable": {
       "name": "ransac",

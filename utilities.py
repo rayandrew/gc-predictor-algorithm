@@ -21,6 +21,7 @@ class TrainType(Enum):
     main = 'main'
     stringtable = 'stringtable'
     prune = 'prune'
+    otyrt = 'otyrt'
 
     def __str__(self):
         return self.value    
@@ -55,35 +56,14 @@ def generate_schema(task: Task):
         return parse_config_schema
         
     def generate_train_schema():
-        main_data_schema = {
+        data_schema = {
             'type': 'array',
             'items': {
                 'type': 'string',
-                # 'type': 'object',
-                # 'properties': {
-                #     'name': {'type' : 'string'},
-                #     'file': {'type' : 'string'},
-                # },
-                # 'required': ['name', 'file'],
             },
             'minItems': 1,
         }
 
-        stringtable_data_schema = {
-            'type': 'array',
-            'items': {
-                'type': 'string',
-                # 'type': 'object',
-                # 'properties': {
-                #     'name': {'type' : 'string'},
-                #     'file': {'type' : 'string'},
-                #     'old_format': {'type': 'boolean'},
-                # },
-                # 'required': ['name', 'file'],
-            },
-            'minItems': 1,
-        }
-        
         train_config_schema =  {
             'type' : 'object',
             'properties' : {
@@ -112,8 +92,10 @@ def generate_schema(task: Task):
                 'data': {
                     'type': 'object',
                     'properties': {
-                        'main': main_data_schema,
-                        'stringtable': stringtable_data_schema,
+                        'main': data_schema,
+                        'stringtable': data_schema,
+                        'prune': data_schema,
+                        'otyrt': data_schema,
                     },
                 },
             },
@@ -173,6 +155,8 @@ def generate_schema(task: Task):
                 'properties': {
                     'main': inference_model_schema,
                     'stringtable': inference_model_schema,
+                    'prune': inference_model_schema,
+                    'otyrt': inference_model_schema,
                 }
             },
             'data': inference_data_schema,

@@ -15,32 +15,15 @@ from model import save_diff
 import utilities
 
 DATA_COL = [
-#     'gc_id',
-#     'before_gc_live_objects',
-#     'before_gc_dead_objects',
-#     'before_gc_total_objects',
-#     'before_gc_roots_walk_elapsed',
     'allocation_size',
-#     'young_gen_live_objects',
-#     'young_gen_dead_objects',
     'young_gen_total_objects',
-#     'young_gen_roots_walk_elapsed',
-#     'total_young_gen_heap',
-#     'used_young_gen_heap',
-#     'old_gen_live_objects',
-#     'old_gen_dead_objects',
-#     'old_gen_total_objects',
-#     'old_gen_roots_walk_elapsed',
-#     'total_old_gen_heap',
-#     'used_old_gen_heap',
-#     'phases',
-#     'stringtable_time',
+#    'young_gen_heap_free',
     'stringtable_size',
-#     'stringtable_processed',
-#     'stringtable_removed',
+    'prune_nmethod_time',
     'gc_time',
-#     'gc_time_clean'
 ]
+
+NUM_COL = len(DATA_COL)
 
 def prepare_dataset(config, columns = DATA_COL):
     print('Reading data...')
@@ -49,27 +32,31 @@ def prepare_dataset(config, columns = DATA_COL):
     ], columns)
     return dataset
 
-def test_predictor(dataset, main_predictor, stringtable_predictor):
+def test_predictor(dataset, main_predictor, stringtable_predictor, prune_predictor):
     from sklearn.metrics import mean_squared_error, r2_score
-    X_main = dataset.iloc[:, :-2]
-    X_stringtable = dataset.iloc[:, 2:-1]
+    X_main = dataset.iloc[:, :-3]
+    X_stringtable = dataset.iloc[:, 2:-2]
+    X_prune = dataset.iloc[:, 3:-1]
     y = dataset.iloc[:, -1]
     main_y_pred = main_predictor.predict(X_main)
     stringtable_y_pred = stringtable_predictor.predict(X_stringtable)
-    y_pred = main_y_pred + stringtable_y_pred
+    prune_y_pred = prune_predictor.predict(X_prune)
+    y_pred = main_y_pred + stringtable_y_pred + prune_y_pred
     mse = mean_squared_error(y, y_pred)
     r2 = r2_score(y, y_pred)
     print('Mean squared error: %.8f' % mse)
     print('Coefficient of determination: %.8f' % r2)
     return mse, r2
 
-def generate_diff(dataset, main_predictor, stringtable_predictor):
-    X_main = dataset.iloc[:, :-2]
-    X_stringtable = dataset.iloc[:, 2:-1]
+def generate_diff(dataset, main_predictor, stringtable_predictor, prune_predictor):
+    X_main = dataset.iloc[:, :-3]
+    X_stringtable = dataset.iloc[:, 2:-2]
+    X_prune = dataset.iloc[:, 3:-1]
     y = dataset.iloc[:, -1]
     main_y_pred = np.asarray(main_predictor.predict(X_main), dtype=float)
     stringtable_y_pred = np.asarray(stringtable_predictor.predict(X_stringtable), dtype=float)
-    pred = main_y_pred + stringtable_y_pred
+    prune_y_pred = np.asarray(prune_predictor.predict(X_prune), dtype=float)
+    pred = main_y_pred + stringtable_y_pred + prune_y_pred
     diffs = []
     for i in range(len(y.values)):
         real = y.values[i]
@@ -129,10 +116,10 @@ def save_plots(config, cdf_dir: str, gnuplot_dir: str, output_dir: str):
     output_name = '{}-combined'.format(config['name'])
     config_combined = config['combined_plot']
     config_model = config['model']
-    
+
     title = '{/*1.2 Diff = Predicted GC Time - Real GC Time}'
     pred_title = '{/*0.8 MainModel = ' + config_model['main']['name'] + ', StringTableModel = ' + config_model['stringtable']['name'] + '}'
-    
+
     subtitle = ''
     if 'subtitle' in config_combined:
         subtitle = config_combined['subtitle']
@@ -161,7 +148,7 @@ def save_plots(config, cdf_dir: str, gnuplot_dir: str, output_dir: str):
         for file_idx in range(len(config['data'])):
             data_config = config['data'][file_idx]
             data_name = data_config['name']
-            data_label = data_config['label'] if 'label' in data_config else dataset_name 
+            data_label = data_config['label'] if 'label' in data_config else dataset_name
             data_color = data_config['color']
             if file_idx == 0:
                 f.write('    "{}/{}-diff-cdf.dat" u 2:1 with lines t "{}" dt 1 lw 6 lc rgb "{}", \\\n'
@@ -186,23 +173,24 @@ def main(args):
     print('Preparing predictors...')
     main_predictor = utilities.load(config['model']['main']['file'])
     stringtable_predictor = utilities.load(config['model']['stringtable']['file'])
+    prune_predictor = utilities.load(config['model']['prune']['file'])
 
     print('Preparing other output dirs')
     cdf_dir = '{}/cdf'.format(output_dir)
     gnuplot_dir = '{}/gnuplot'.format(output_dir)
     plot_dir = '{}/plot'.format(output_dir)
-    
+
     utilities.create_dir(cdf_dir)
     utilities.create_dir(gnuplot_dir)
     utilities.create_dir(plot_dir)
-    
+
     pbar = tqdm(range(len(datasets)))
     for idx in pbar:
         name = config['data'][idx]['name']
         pbar.set_description('Outputting performance metrics for dataset {}'.format(name))
-        mse, r2 = test_predictor(datasets[idx], main_predictor, stringtable_predictor)
+        mse, r2 = test_predictor(datasets[idx], main_predictor, stringtable_predictor, prune_predictor)
         pbar.set_description('Generating diffs for dataset {}'.format(name))
-        diff = generate_diff(datasets[idx], main_predictor, stringtable_predictor)
+        diff = generate_diff(datasets[idx], main_predictor, stringtable_predictor, prune_predictor)
         pbar.set_description('Saving diffs for dataset {} prediction'.format(name))
         sorted_indexes = save_diff(config, cdf_dir, config['data'][idx]['name'], diff)
         pbar.set_description('Creating plot for database {} prediction'.format(name))
@@ -210,7 +198,6 @@ def main(args):
 
     print('Saving combined plot')
     save_plots(config, cdf_dir, gnuplot_dir, plot_dir)
-        
+
 if __name__ == '__main__':
     main(utilities.get_args())
-    

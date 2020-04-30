@@ -67,7 +67,6 @@ def parse_line_summaries(line: str):
     infos = new_line.split()[1:]
     result = {}
     for info in infos:
-        temp = {}
         # only contains two elements if splitted
         key, value, *rest = info.split('=')
         assert(len(rest) == 0)
@@ -178,7 +177,7 @@ def parse(filename, output, old_format: bool = False):
                 if line.startswith('  summaries: context=OldGen'):
                     old_gen_summary = parse_line_summaries(line)
                 elif line.startswith('  summaries: context=YoungGen'):
-                    young_gen_summary = parse_line_summaries(line)            
+                    young_gen_summary = parse_line_summaries(line)
                 elif line.startswith('  summaries:'):
                     summary = parse_line_summaries(line)
                     count += 1
