@@ -5,4 +5,3 @@ joblib
 statsmodels
 jsonschema
 tqdm
-python-json-config
