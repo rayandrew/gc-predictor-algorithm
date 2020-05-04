@@ -1,0 +1,10 @@
+{
+  "name": "512M_1T_NEW",
+  "data": [
+    {
+      "name": "renaissance",
+      "file": "./data/raw/512M_1T_NEW/renaissance/ucare.log",
+      "parallel": false
+    }
+  ]
+}

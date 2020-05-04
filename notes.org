@@ -1,0 +1,25 @@
+#+TITLE: Notes
+
+* GC Time
+- ScavengeTime
+    - NMethod (prologue + epilogue)
+    - SRT
+    - TRT
+    - OTYRT
+    - Steal -> Parallel
+    - Idle
+    - Barrier
+- References
+- StringTable
+- Prune
+
+
+
+# Scavenge              0.0148251
+#     nmethod  0.0000051
+#     Worker   0.014431
+# References            0.010253
+# StringTable           0.0006936
+# Prune                 0.0003510
+# -------------------------------
+# GC Time               0.0266103

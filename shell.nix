@@ -16,5 +16,12 @@ with pkgs;
 
 lib.overrideDerivation (import ./.) (attrs: {
   src = null;
-  buildInputs = attrs.buildInputs ++ [ ];
+  buildInputs = attrs.buildInputs ++ [
+    bashInteractive
+  ];
+  shellHook = ''
+    export PIP_PREFIX="$(pwd)/_build/pip_packages"
+    export PYTHONPATH="$(pwd)/_build/pip_packages/lib/python3.7/site-packages:$PYTHONPATH"
+    unset SOURCE_DATE_EPOCH
+  '';
 })

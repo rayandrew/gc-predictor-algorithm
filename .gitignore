@@ -142,3 +142,5 @@ data/
 raw_data
 
 .DS_Store
+
+bak_*

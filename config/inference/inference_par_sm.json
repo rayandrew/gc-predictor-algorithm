@@ -1,0 +1,60 @@
+{
+  "name": "512M_PAR_SM",
+  "skip_value": 0,
+  "data_dir": "./data/processed/512M_PAR",
+  "parallel": true,
+  "model": {
+    "nmethod": {
+      "name": "sm",
+      "file": "./results/512M_PAR/train/nmethod/model/sm.joblib",
+      "sm_add_constant": true
+    },
+    "srt": {
+      "name": "sm",
+      "file": "./results/512M_PAR/train/srt/model/sm.joblib",
+      "sm_add_constant": true
+    },
+    "trt": {
+      "name": "sm",
+      "file": "./results/512M_PAR/train/trt/model/sm.joblib",
+      "sm_add_constant": true
+    },
+    "references": {
+      "name": "sm",
+      "file": "./results/512M_PAR/train/references/model/sm.joblib",
+      "sm_add_constant": true
+    },
+    "otyrt": {
+      "name": "sm",
+      "file": "./results/512M_PAR/train/otyrt/model/sm.joblib",
+      "sm_add_constant": true
+    },
+    "prune": {
+      "name": "sm",
+      "file": "./results/512M_PAR/train/prune/model/sm.joblib",
+      "sm_add_constant": true
+    },
+    "steal": {
+      "name": "sm",
+      "file": "./results/512M_PAR/train/steal/model/sm.joblib",
+      "sm_add_constant": true
+    },
+    "stringtable": {
+      "name": "lreg",
+      "file": "./results/benchmarks/train/stringtable/model/lreg.joblib"
+    }
+  },
+  "combined_plot": {
+    "max": 100,
+    "min": -100,
+    "subtitle": "Heap Size 4G"
+  },
+  "data": [
+    {
+      "name": "renaissance",
+      "color": "green",
+      "label": "Renaissance",
+      "subtitle": ""
+    }
+  ]
+}

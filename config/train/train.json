@@ -1,0 +1,61 @@
+{
+  "name": "512M_1T_NEW",
+  "skip_value": 0,
+  "sm_add_constant": false,
+  "data_dir": "./data/processed/512M_1T_NEW",
+  "models": [
+    "ransac",
+    "lreg",
+    "sm"
+  ],
+  "subtitle": "",
+  "data": {
+    "srt": [
+      {
+        "name": "renaissance",
+        "query": "need_full_gc == False"
+      }
+    ],
+    "trt": [
+      {
+        "name": "renaissance",
+        "query": "need_full_gc == False"
+      }
+    ],
+    "otyrt": [
+      {
+        "name": "renaissance",
+        "query": "need_full_gc == False"
+      }
+    ],
+    "references": [
+      {
+        "name": "renaissance",
+        "query": "need_full_gc == False"
+      }
+    ],
+    "nmethod": [
+      {
+        "name": "renaissance",
+        "query": "need_full_gc == False"
+      }
+    ],
+    "prune": [
+      {
+        "name": "renaissance",
+        "query": "need_full_gc == False"
+      }
+    ],
+    "stringtable": [
+      "1",
+      "1_30006",
+      "1_120026",
+      "2",
+      "2_30006",
+      "2_120026",
+      "3",
+      "3_30006",
+      "3_120026"
+    ]
+  }
+}

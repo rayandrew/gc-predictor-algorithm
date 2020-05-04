@@ -1,0 +1,25 @@
+{
+  "name": "PAR",
+  "data": [
+    {
+      "name": "renaissance-512M",
+      "file": "./data/raw/512M_PAR/renaissance/ucare.log",
+      "parallel": true
+    },
+    {
+      "name": "renaissance-4G",
+      "file": "./data/raw/4G_PAR/renaissance/ucare.log",
+      "parallel": true
+    },
+    {
+      "name": "dacapo",
+      "file": "./data/raw/4G_PAR/dacapo/ucare.log",
+      "parallel": true
+    },
+    {
+      "name": "specjvm",
+      "file": "./data/raw/4G_PAR/specjvm/ucare.log",
+      "parallel": true
+    }
+  ]
+}

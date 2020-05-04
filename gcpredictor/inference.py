@@ -10,53 +10,87 @@ import subprocess
 
 from tqdm import tqdm
 
-from model import save_diff
+from gcpredictor.config import load_config, Task
+from gcpredictor.model import save_diff
+from gcpredictor.dataset import prepare_inference_dataset, \
+    remove_last_col, \
+    NMETHOD_COL, \
+    SRT_COL, \
+    TRT_COL, \
+    OTYRT_COL, \
+    REFERENCES_COL, \
+    STRINGTABLE_COL, \
+    PRUNE_COL, \
+    TARGET_COL
+import gcpredictor.utilities as utilities
 
-import utilities
 
-DATA_COL = [
-    'allocation_size',
-    'young_gen_total_objects',
-#    'young_gen_heap_free',
-    'stringtable_size',
-    'prune_nmethod_time',
-    'gc_time',
-]
+FEATS = {
+    'nmethod': remove_last_col(NMETHOD_COL),
+    'srt': remove_last_col(SRT_COL),
+    'trt': remove_last_col(TRT_COL),
+    'otyrt': remove_last_col(OTYRT_COL),
+    'prune': remove_last_col(PRUNE_COL),
+    'stringtable': remove_last_col(STRINGTABLE_COL),
+    'references': remove_last_col(REFERENCES_COL),
+}
 
-NUM_COL = len(DATA_COL)
+PREDICTORS = {} # cache
+RESULT = {}
+PREDICTIONS = {}
 
-def prepare_dataset(config, columns = DATA_COL):
-    print('Reading data...')
-    dataset = utilities.read_data([
-        '{}/{}'.format(config['dir']['data'], data['name']) for data in config['data']
-    ], columns)
-    return dataset
+def generate_predictions(idx: int, config: dict, dataset: pd.DataFrame):
+    global FEATS, PREDICTIONS, PREDICTORS
+    if idx in PREDICTIONS:
+        return PREDICTIONS[idx]
+    else:
+        if config['parallel']:
+            from gcpredictor.dataset import STEAL_COL
+            FEATS['steal'] = remove_last_col(STEAL_COL)
 
-def test_predictor(dataset, main_predictor, stringtable_predictor, prune_predictor):
+        PREDICTORS[idx] = {}
+        RESULT[idx] = {}
+        for feat in FEATS:
+            assert isinstance(config['model'][feat], dict)
+            name = config['model'][feat]['name']
+            PREDICTORS[idx][feat] = \
+                utilities.load(config['model'][feat]['file'])
+            if name == 'sm' \
+               and 'sm_add_constant' in config['model'][feat] \
+               and config['model'][feat]['sm_add_constant']:
+                import statsmodels.api as sm
+                RESULT[idx][feat] = PREDICTORS[idx][feat].predict(sm.add_constant(dataset.loc[:, FEATS[feat]]))
+            else:
+                RESULT[idx][feat] = PREDICTORS[idx][feat].predict(dataset.loc[:, FEATS[feat]])
+
+            if idx in PREDICTIONS:
+                PREDICTIONS[idx] += RESULT[idx][feat]
+            else:
+                PREDICTIONS[idx] = RESULT[idx][feat]
+        return PREDICTIONS[idx]
+
+
+def test_predictor(idx: int, config: dict, dataset: pd.DataFrame):
     from sklearn.metrics import mean_squared_error, r2_score
-    X_main = dataset.iloc[:, :-3]
-    X_stringtable = dataset.iloc[:, 2:-2]
-    X_prune = dataset.iloc[:, 3:-1]
-    y = dataset.iloc[:, -1]
-    main_y_pred = main_predictor.predict(X_main)
-    stringtable_y_pred = stringtable_predictor.predict(X_stringtable)
-    prune_y_pred = prune_predictor.predict(X_prune)
-    y_pred = main_y_pred + stringtable_y_pred + prune_y_pred
+    y = dataset[TARGET_COL[0]]
+    y_pred = generate_predictions(idx, config, dataset)
+    np.savetxt('./results/{}/inference/y_{}.txt'.format(config['name'], idx), y.values)
+    np.savetxt('./results/{}/inference/y_pred_{}.txt'.format(config['name'], idx), y_pred)
     mse = mean_squared_error(y, y_pred)
     r2 = r2_score(y, y_pred)
     print('Mean squared error: %.8f' % mse)
     print('Coefficient of determination: %.8f' % r2)
     return mse, r2
 
-def generate_diff(dataset, main_predictor, stringtable_predictor, prune_predictor):
-    X_main = dataset.iloc[:, :-3]
-    X_stringtable = dataset.iloc[:, 2:-2]
-    X_prune = dataset.iloc[:, 3:-1]
-    y = dataset.iloc[:, -1]
-    main_y_pred = np.asarray(main_predictor.predict(X_main), dtype=float)
-    stringtable_y_pred = np.asarray(stringtable_predictor.predict(X_stringtable), dtype=float)
-    prune_y_pred = np.asarray(prune_predictor.predict(X_prune), dtype=float)
-    pred = main_y_pred + stringtable_y_pred + prune_y_pred
+def generate_diff(idx: int, config: dict, dataset: pd.DataFrame):
+    y = dataset[TARGET_COL[0]]
+    pred = generate_predictions(idx, config, dataset)
+
+    # np.savetxt('{}/{}/inference/main.txt'.format(config['dir']['output'], config['name']), main_y_pred)
+    # np.savetxt('{}/{}/inference/stringtable.txt'.format(config['dir']['output'], config['name']), stringtable_y_pred)
+    # np.savetxt('{}/{}/inference/otyrt.txt'.format(config['dir']['output'], config['name']), otyrt_y_pred)
+    # np.savetxt('{}/{}/inference/pred.txt'.format(config['dir']['output'], config['name']), y)
+
     diffs = []
     for i in range(len(y.values)):
         real = y.values[i]
@@ -82,13 +116,7 @@ def save_plot(config_model, config_data, cdf_dir, gnuplot_dir, output_dir, diff,
     if 'color' in config_data:
         color = config_data['color']
 
-    pred_title = '{/*0.8 MainModel = ' + config_model['main']['name'] + ', StringTableModel = ' + config_model['stringtable']['name'] + '}'
-
-    if 'subtitle' in config_data and config_data['subtitle'] != '':
-        subtitle = '\\n{/*0.75 ' + config_data['subtitle'] + '}'
-    else:
-        subtitle = ''
-    gnuplot_title = 'set title "{}\\n{}{}"\n'.format(title, pred_title, subtitle)
+    gnuplot_title = 'set title "{}\\nData = {}"\n'.format(title, name)
     with open('{}/{}-diff.plt'.format(gnuplot_dir, name), 'w') as f:
         f.write('set term pos eps color solid font ",27"\n')
         f.write('set size 2,2\n')
@@ -116,16 +144,8 @@ def save_plots(config, cdf_dir: str, gnuplot_dir: str, output_dir: str):
     output_name = '{}-combined'.format(config['name'])
     config_combined = config['combined_plot']
     config_model = config['model']
-
+    
     title = '{/*1.2 Diff = Predicted GC Time - Real GC Time}'
-    pred_title = '{/*0.8 MainModel = ' + config_model['main']['name'] + ', StringTableModel = ' + config_model['stringtable']['name'] + '}'
-
-    subtitle = ''
-    if 'subtitle' in config_combined:
-        subtitle = config_combined['subtitle']
-
-    if subtitle != '':
-        subtitle = '{/*0.75 ' + subtitle + '}'
 
     min_bound = config_combined['min']
     max_bound = config_combined['max']
@@ -133,7 +153,7 @@ def save_plots(config, cdf_dir: str, gnuplot_dir: str, output_dir: str):
     with open('{}/{}-diff.plt'.format(gnuplot_dir, output_name), 'w') as f:
         f.write('set term pos eps color solid font ",27"\n')
         f.write('set size 2,2\n')
-        f.write('set title "{}\\n{}\\n{}"\n'.format(title, pred_title, subtitle))
+        f.write('set title "{}"\n'.format(title))
         f.write('set key Left\n')
         f.write('set xlabel "Predicted GC Pause - Real GC Pause (ms)"\n')
         f.write('set ylabel "CDF of differences"\n')
@@ -148,7 +168,7 @@ def save_plots(config, cdf_dir: str, gnuplot_dir: str, output_dir: str):
         for file_idx in range(len(config['data'])):
             data_config = config['data'][file_idx]
             data_name = data_config['name']
-            data_label = data_config['label'] if 'label' in data_config else dataset_name
+            data_label = data_config['label'] if 'label' in data_config else dataset_name 
             data_color = data_config['color']
             if file_idx == 0:
                 f.write('    "{}/{}-diff-cdf.dat" u 2:1 with lines t "{}" dt 1 lw 6 lc rgb "{}", \\\n'
@@ -164,40 +184,50 @@ def save_plots(config, cdf_dir: str, gnuplot_dir: str, output_dir: str):
 
 def main(args):
     print('Reading config...')
-    config = utilities.read_json_config(args.config, utilities.Task.inference)
-    print('Preparing output directory...')
-    output_dir = '{}/{}/inference'.format(config['dir']['output'], config['name'])
-    utilities.create_dir(output_dir)
+    config = load_config(args.config, Task.inference)
     print('Preparing dataset...')
-    datasets = prepare_dataset(config, DATA_COL)
-    print('Preparing predictors...')
-    main_predictor = utilities.load(config['model']['main']['file'])
-    stringtable_predictor = utilities.load(config['model']['stringtable']['file'])
-    prune_predictor = utilities.load(config['model']['prune']['file'])
+    datasets = prepare_inference_dataset(config)
+    print('Preparing output directory...')
+    output_dir = './results/{}/inference'.format(config['name'])
+    utilities.create_dir(output_dir)
 
     print('Preparing other output dirs')
     cdf_dir = '{}/cdf'.format(output_dir)
     gnuplot_dir = '{}/gnuplot'.format(output_dir)
     plot_dir = '{}/plot'.format(output_dir)
-
+    
     utilities.create_dir(cdf_dir)
     utilities.create_dir(gnuplot_dir)
     utilities.create_dir(plot_dir)
-
+    
     pbar = tqdm(range(len(datasets)))
     for idx in pbar:
         name = config['data'][idx]['name']
         pbar.set_description('Outputting performance metrics for dataset {}'.format(name))
-        mse, r2 = test_predictor(datasets[idx], main_predictor, stringtable_predictor, prune_predictor)
+        mse, r2 = test_predictor(idx,
+                                 config,
+                                 datasets[idx])
         pbar.set_description('Generating diffs for dataset {}'.format(name))
-        diff = generate_diff(datasets[idx], main_predictor, stringtable_predictor, prune_predictor)
+        diff = generate_diff(idx,
+                             config,
+                             datasets[idx])
         pbar.set_description('Saving diffs for dataset {} prediction'.format(name))
-        sorted_indexes = save_diff(config, cdf_dir, config['data'][idx]['name'], diff)
+        sorted_indexes = save_diff(config,
+                                   cdf_dir,
+                                   config['data'][idx]['name'],
+                                   diff)
         pbar.set_description('Creating plot for database {} prediction'.format(name))
-        save_plot(config['model'], config['data'][idx], cdf_dir, gnuplot_dir, plot_dir, diff, sorted_indexes)
+        save_plot(config['model'],
+                  config['data'][idx],
+                  cdf_dir,
+                  gnuplot_dir,
+                  plot_dir,
+                  diff,
+                  sorted_indexes)
 
     print('Saving combined plot')
     save_plots(config, cdf_dir, gnuplot_dir, plot_dir)
-
+        
 if __name__ == '__main__':
     main(utilities.get_args())
+    

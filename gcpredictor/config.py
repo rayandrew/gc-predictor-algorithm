@@ -1,30 +1,30 @@
-import os
-import argparse
 import json
-import pandas as pd
-
-import joblib
 import jsonschema
-from tqdm import tqdm
 
 from enum import Enum
 
 class Task(Enum):
     train = 'train'
     parse = 'parse'
-    inference = 'inference'    
+    inference = 'inference'
 
     def __str__(self):
         return self.value
 
 class TrainType(Enum):
-    main = 'main'
+    nmethod = 'nmethod'
+    srt = 'srt'
+    trt = 'trt'
+    steal = 'steal'
+    barrier = 'barrier'
+    idle = 'idle'
+    otyrt = 'otyrt'
+    references = 'references'
     stringtable = 'stringtable'
     prune = 'prune'
-    otyrt = 'otyrt'
 
     def __str__(self):
-        return self.value    
+        return self.value
 
 def generate_schema(task: Task):
     def generate_parse_schema():
@@ -36,6 +36,7 @@ def generate_schema(task: Task):
                     'name': {'type' : 'string'},
                     'file': {'type' : 'string'},
                     'old_format': {'type': 'boolean'},
+                    'parallel': { 'type': 'boolean' }
                 },
                 'required': ['name', 'file'],
             },
@@ -43,23 +44,27 @@ def generate_schema(task: Task):
         }
         parse_config_schema = {
             'name': {'type' : 'string'},
-            'dir': {
-                'type' : 'object',
-                'properties': {
-                    'data': {'type' : 'string'},
-                    'output': {'type' : 'string'},
-                },
-                'required': ['data', 'output'],
-            },
             'data': parse_data_schema,
         }
         return parse_config_schema
-        
+
     def generate_train_schema():
         data_schema = {
             'type': 'array',
             'items': {
-                'type': 'string',
+                'anyOf': [
+                    {
+                        'type': 'string',
+                    },
+                    {
+                        'type': 'object',
+                        'properties': {
+                            'name': { 'type': 'string' },
+                            'query': { 'type': 'string' },
+                        },
+                        'required': ['name'],
+                    }
+                ],
             },
             'minItems': 1,
         }
@@ -70,20 +75,14 @@ def generate_schema(task: Task):
                 'name': {'type' : 'string'},
                 'skip_value' : {'type' : 'number'},
                 'sm_add_constant' : {'type' : 'boolean'},
+                'data_dir': {'type' : 'string'},
                 'subtitle': {'type' : 'string'},
-                'dir': {
-                    'type' : 'object',
-                    'properties': {
-                        'data': {'type' : 'string'},
-                        'output': {'type' : 'string'},
-                    },
-                    'required': ['data', 'output'],
-                },
+                'parallel': { 'type': 'boolean' },
                 'models': {
                     'type': 'array',
                     'items': {
                         'type': 'string',
-                        'enum': ['ransac', 'lreg', 'svr']
+                        'enum': ['ransac', 'lreg', 'svr', 'sm']
                     },
                     'minItems': 1,
                     'maxItems': 3,
@@ -92,10 +91,12 @@ def generate_schema(task: Task):
                 'data': {
                     'type': 'object',
                     'properties': {
-                        'main': data_schema,
+                        'srt': data_schema,
+                        'trt': data_schema,
+                        'otyrt': data_schema,
+                        'references': data_schema,
                         'stringtable': data_schema,
                         'prune': data_schema,
-                        'otyrt': data_schema,
                     },
                 },
             },
@@ -124,6 +125,7 @@ def generate_schema(task: Task):
             'properties': {
                 'name': {'type' : 'string'},
                 'file': {'type' : 'string'},
+                'sm_add_constant' : {'type' : 'boolean'},
             },
             'required': ['name', 'file'],
         }
@@ -131,16 +133,9 @@ def generate_schema(task: Task):
         inference_config_schema = {
             'name': {'type' : 'string'},
             'skip_value' : {'type' : 'number'},
-            'sm_add_constant' : {'type' : 'boolean'},
+            'data_dir': {'type' : 'string'},
             'subtitle': {'type' : 'string'},
-            'dir': {
-                'type' : 'object',
-                'properties': {
-                    'data': {'type' : 'string'},
-                    'output': {'type' : 'string'},
-                },
-                'required': ['data', 'output'],
-            },
+            'parallel': { 'type': 'boolean' },
             'combined_plot': {
                 'type' : 'object',
                 'properties': {
@@ -170,54 +165,8 @@ def generate_schema(task: Task):
     else:
         return generate_inference_schema()
 
-def read_json_config(path: str, task: Task = Task.parse):
+def load_config(path: str, task: Task = Task.parse):
     with open(path) as f:
         config = json.load(f)
         jsonschema.validate(config, generate_schema(task))
-        return config    
-
-def get_args(train: bool = False):
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--config', help='Config file', required=True)
-    if train:
-        parser.add_argument('-t', '--type', type=TrainType, help='Config file', required=True, choices=list(TrainType))
-    args = parser.parse_args()
-    return args
-
-# def is_main_train(train_type: TrainType = TrainType.main):
-    # return train_type == TrainType.main
-
-def read_data(csv_files, data_col, prefix = ''):
-    datasets = []
-    pbar = tqdm(csv_files)
-    for csv_file in pbar:
-        csvfile = '{}{}.csv'.format(prefix, csv_file)
-        pbar.set_description('Reading csv file {}'.format(csvfile))
-        dataset = pd.read_csv(csvfile)[data_col]
-        datasets.append(dataset)
-    return datasets
-
-def clean_data(dataframe: pd.DataFrame, n_round: int = 2):
-    df = dataframe.copy(deep=True)
-    df = df.round(n_round)
-    df = df.drop_duplicates()
-    return df
-
-def format_date(date):
-    return '{}-{}-{}T{}:{}:{}'.format(date.day, date.month, date.year, date.hour, date.minute, date.second)
-
-def create_dir(path: str):
-    try:
-        os.makedirs(path, exist_ok=True)
-    except OSError:
-        print ('Creation of the directory %s failed' % path)
-        return False
-    else:
-        print ('Successfully created the directory %s ' % path)
-        return True
-
-def save(filename: str, payload):
-    joblib.dump(payload, filename)
-
-def load(filename: str):
-    return joblib.load(filename)
+        return config

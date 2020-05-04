@@ -1,0 +1,65 @@
+{
+  "name": "4G",
+  "skip_value": 0,
+  "data_dir": "./data/processed/PAR",
+  "parallel": true,
+  "model": {
+    "nmethod": {
+      "name": "lreg",
+      "file": "./results/4G/train/nmethod/model/lreg.joblib"
+    },
+    "srt": {
+      "name": "lreg",
+      "file": "./results/4G/train/srt/model/lreg.joblib"
+    },
+    "trt": {
+      "name": "lreg",
+      "file": "./results/4G/train/trt/model/lreg.joblib"
+    },
+    "references": {
+      "name": "lreg",
+      "file": "./results/4G/train/references/model/lreg.joblib"
+    },
+    "otyrt": {
+      "name": "lreg",
+      "file": "./results/4G/train/otyrt/model/lreg.joblib"
+    },
+    "steal": {
+      "name": "lreg",
+      "file": "./results/4G/train/steal/model/lreg.joblib"
+    },
+    "prune": {
+      "name": "lreg",
+      "file": "./results/4G/train/prune/model/lreg.joblib"
+    },
+    "stringtable": {
+      "name": "lreg",
+      "file": "./results/benchmarks/train/stringtable/model/lreg.joblib"
+    }
+  },
+  "combined_plot": {
+    "max": 100,
+    "min": -100,
+    "subtitle": "Heap Size 4G"
+  },
+  "data": [
+    {
+      "name": "renaissance-4G",
+      "color": "green",
+      "label": "Renaissance",
+      "subtitle": ""
+    },
+    {
+      "name": "dacapo",
+      "color": "blue",
+      "label": "DaCapo",
+      "subtitle": ""
+    },
+    {
+      "name": "specjvm",
+      "color": "red",
+      "label": "SpecJVM",
+      "subtitle": ""
+    }
+  ]
+}

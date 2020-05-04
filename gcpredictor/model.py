@@ -1,10 +1,11 @@
 from tqdm import tqdm
 import numpy as np
+import pandas as pd
 
 def get_model_name(model: str):
     if model == 'ransac':
         return 'RANSAC Linear Regression'
-    elif model == 'lreg':
+    elif model == 'lreg' or model == 'sm':
         return 'Linear Regression'
     elif model == 'svr':
         return 'Support Vector Regression'
@@ -14,15 +15,18 @@ def get_model_name(model: str):
 def prepare_trainer(config):
     def train_sm(X, y, add_constant=False):
         import statsmodels.api as sm
-        X_tr = X
-        if add_constant:
-            X_tr = sm.add_constant(X)
-        res = sm.OLS(y, X_tr).fit()
+        res = sm.OLS(y, sm.add_constant(X) if add_constant else X).fit()
         return res
 
-    def train_sklearn(X, y):
+    def train_ransac(X, y):
         from sklearn.linear_model import RANSACRegressor
         reg = RANSACRegressor(random_state=42)
+        reg.fit(X, y)
+        return reg
+
+    def train_lreg(X, y):
+        from gcpredictor.regression import CustomLinearRegression
+        reg = CustomLinearRegression()
         reg.fit(X, y)
         return reg
 
@@ -35,35 +39,44 @@ def prepare_trainer(config):
     predictor_trainers = {}
 
     if 'ransac' in config['models']:
-        predictor_trainers['ransac'] = train_sklearn
-        
+        predictor_trainers['ransac'] = train_ransac
+
     if 'lreg' in config['models']:
-        predictor_trainers['lreg'] = train_sm
+        predictor_trainers['lreg'] = train_lreg
+
+    if 'sm' in config['models']:
+        predictor_trainers['sm'] = train_sm
 
     if 'svr' in config['models']:
         predictor_trainers['svr'] = train_svr
 
     return predictor_trainers
 
-def train_predictor(config, trainers, dataset):
+def train_predictor(config: dict, trainers: dict, dataset: pd.DataFrame):
     predictors = {}
 
     X_train, _, y_train, _ = dataset['splitted_dataset']
-    clean_X_train, _, clean_y_train, _ = dataset['splitted_cleaned_dataset']
+    # clean_X_train, _, clean_y_train, _ = dataset['splitted_cleaned_dataset']
 
     pbar = tqdm(trainers)
     for trainer in pbar:
         pbar.set_description('Training predictor with algorithm {}'.format(trainer))
-        if 'lreg' in trainer:
-            predictors[trainer] = trainers[trainer](X_train, y_train, config['sm_add_constant'])
-            predictors['cleaned_{}'.format(trainer)] = trainers[trainer](clean_X_train, clean_y_train, config['sm_add_constant'])
-        else:
-            predictors[trainer] = trainers[trainer](X_train, y_train)
-            predictors['cleaned_{}'.format(trainer)] = trainers[trainer](clean_X_train, clean_y_train)
+        try:
+            if 'sm' in trainer:
+                predictors[trainer] = trainers[trainer](
+                    X_train, y_train, config['sm_add_constant'])
+                # predictors['cleaned_{}'.format(trainer)] = trainers[trainer](clean_X_train, clean_y_train, config['sm_add_constant'])
+            else:
+                predictors[trainer] = trainers[trainer](
+                    X_train, y_train)
+                # predictors['cleaned_{}'.format(trainer)] = trainers[trainer](clean_X_train, clean_y_train)
+        except:
+            print('This data cannot be trained using {}'.format(trainer))
+            print('Skipping...')
 
     return predictors
 
-def test_predictor(predictors, dataset):
+def test_predictor(config: dict, predictors: dict, dataset: pd.DataFrame):
     def test(_model, X, y):
         from sklearn.metrics import mean_squared_error, r2_score
         y_pred = _model.predict(X)
@@ -74,18 +87,22 @@ def test_predictor(predictors, dataset):
         return mse, r2
 
     _, X_test, _, y_test = dataset['splitted_dataset']
-    _, clean_X_test, _, clean_y_test = dataset['splitted_cleaned_dataset']
+    # _, clean_X_test, _, clean_y_test = dataset['splitted_cleaned_dataset']
 
     result = {}
     
     pbar = tqdm(predictors)
     for predictor in pbar:
         pbar.set_description('Test plain dataset with algorithm {}'.format(predictor))
-        mse, r2 = test(predictors[predictor], X_test, y_test)
+        if 'sm' in predictor and config['sm_add_constant']:
+            import statsmodels.api as sm
+            mse, r2 = test(predictors[predictor], sm.add_constant(X_test), y_test)
+        else:
+            mse, r2 = test(predictors[predictor], X_test, y_test)
         result['{}'.format(predictor)] = mse, r2
-        pbar.set_description('Test cleaned dataset with algorithm {}'.format(predictor))
-        clean_mse, clean_r2 = test(predictors[predictor], clean_X_test, clean_y_test)
-        result['cleaned_{}'.format(predictor)] = clean_mse, clean_r2
+        # pbar.set_description('Test cleaned dataset with algorithm {}'.format(predictor))
+        # clean_mse, clean_r2 = test(predictors[predictor], clean_X_test, clean_y_test)
+        # result['cleaned_{}'.format(predictor)] = clean_mse, clean_r2
 
     return result
 
@@ -94,7 +111,8 @@ def generate_diff(config, predictors, predictor, dataset):
     result = {}
     _dataset = dataset['predict']
 
-    if 'lreg' in predictor and config['sm_add_constant']:
+    if 'sm' in predictor and config['sm_add_constant']:
+        import statsmodels.api as sm
         pred = np.asarray(predictors[predictor].predict(sm.add_constant(_dataset[0])), dtype=float)
     else:
         pred = np.asarray(predictors[predictor].predict(_dataset[0]), dtype=float)

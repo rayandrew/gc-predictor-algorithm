@@ -4,6 +4,7 @@ let
   pname   = "gc-predictor-algo";
   version = "0.0.1";
   project-python-packages = python-packages: with python-packages; [
+    pip
     pandas
     scikitlearn
     numpy

@@ -1,0 +1,49 @@
+{
+  "name": "512M_1T_NEW",
+  "skip_value": 0,
+  "sm_add_constant": false,
+  "data_dir": "./data/processed/512M_1T_NEW",
+  "model": {
+    "nmethod": {
+      "name": "lreg",
+      "file": "./results/512M_1T_NEW/train/nmethod/model/lreg.joblib"
+    },
+    "srt": {
+      "name": "lreg",
+      "file": "./results/512M_1T_NEW/train/srt/model/lreg.joblib"
+    },
+    "trt": {
+      "name": "lreg",
+      "file": "./results/512M_1T_NEW/train/trt/model/lreg.joblib"
+    },
+    "references": {
+      "name": "lreg",
+      "file": "./results/512M_1T_NEW/train/references/model/lreg.joblib"
+    },
+    "otyrt": {
+      "name": "lreg",
+      "file": "./results/512M_1T_NEW/train/otyrt/model/lreg.joblib"
+    },
+    "prune": {
+      "name": "lreg",
+      "file": "./results/512M_1T_NEW/train/prune/model/lreg.joblib"
+    },
+    "stringtable": {
+      "name": "lreg",
+      "file": "./results/benchmarks/train/stringtable/model/lreg.joblib"
+    }
+  },
+  "combined_plot": {
+    "max": 100,
+    "min": -100,
+    "subtitle": "Heap Size 4G"
+  },
+  "data": [
+    {
+      "name": "renaissance",
+      "color": "green",
+      "label": "Renaissance",
+      "subtitle": ""
+    }
+  ]
+}
