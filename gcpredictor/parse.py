@@ -377,7 +377,7 @@ class Parser(object):
                             young_gen_gc_time = self.parse_trace_time(line, 'YoungGenTime')
                         elif 'PreScavengeTime' in line \
                              or 'PostScavengeTime' in line \
-                             or 'PruneScavengetime' in line:
+                             or 'PruneScavengeTime' in line:
                             pass
                         elif 'ScavengeTime' in line:
                             scavenge_time = self.parse_trace_time(line, 'ScavengeTime')
