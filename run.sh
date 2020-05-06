@@ -3,6 +3,8 @@ set -euo pipefail
 
 PYTHON="python"
 
+export PYTHONPATH="`pwd`:$PYTHONPATH"
+
 run_help() {
     echo "Available Commands: "
     echo "- help (this command)"
