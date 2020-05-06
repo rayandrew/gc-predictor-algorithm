@@ -480,7 +480,7 @@ class Parser(object):
                             choosen_worker = None
                             for worker in workers:
                                 if choosen_worker is not None:
-                                    if worker['elapsed_time'] > choosen_worker['elapsed_time']:
+                                    if worker['task_count'] > choosen_worker['task_count']:
                                         choosen_worker = worker
                                 else:
                                     choosen_worker = worker
