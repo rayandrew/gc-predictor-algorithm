@@ -30,12 +30,14 @@ class Parser(object):
             'srt_live',
             'srt_dead',
             'srt_total',
+            'srt_stack_depth_counter',
             'srt_elapsed',
 
             ## trt
             'trt_live',
             'trt_dead',
             'trt_total',
+            'trt_stack_depth_counter',
             'trt_elapsed',
 
             ## otyrt
@@ -47,6 +49,7 @@ class Parser(object):
             'otyrt_objects_scanned_counter',
             'otyrt_card_increment_counter',
             'otyrt_total_max_card_pointer_being_walked_through',
+            'otyrt_stack_depth_counter',
             'otyrt_elapsed',
 
             ## steal
@@ -224,12 +227,14 @@ class Parser(object):
                 'live': 0,
                 'dead': 0,
                 'total': 0,
+                'stack_depth_counter': 0,
                 'elapsed': 0.0,
             },
             'trt': {
                 'live': 0,
                 'dead': 0,
                 'total': 0,
+                'stack_depth_counter': 0,
                 'elapsed': 0.0,
             },
             'steal': {
@@ -249,6 +254,7 @@ class Parser(object):
                 'objects_scanned_counter': 0,
                 'card_increment_counter': 0,
                 'total_max_card_pointer_being_walked_through': 0,
+                'stack_depth_counter': 0,
                 'elapsed': 0.0,
             },
             'idle': {
@@ -261,11 +267,13 @@ class Parser(object):
                 result['srt']['live'] += task['live']
                 result['srt']['dead'] += task['dead']
                 result['srt']['total'] += task['total']
+                result['srt']['stack_depth_counter'] += task['stack_depth_counter']
                 result['srt']['elapsed'] += task['elapsed']
             elif task['type'] == 'TRT':
                 result['trt']['live'] += task['live']
                 result['trt']['dead'] += task['dead']
                 result['trt']['total'] += task['total']
+                result['trt']['stack_depth_counter'] += task['stack_depth_counter']
                 result['trt']['elapsed'] += task['elapsed']
             elif task['type'] == 'OTYRT':
                 result['otyrt']['stripe_num'] += task['stripe_num']
@@ -276,6 +284,7 @@ class Parser(object):
                 result['otyrt']['objects_scanned_counter'] += task['objects_scanned_counter']
                 result['otyrt']['card_increment_counter'] += task['card_increment_counter']
                 result['otyrt']['total_max_card_pointer_being_walked_through'] += task['total_max_card_pointer_being_walked_through']
+                result['otyrt']['stack_depth_counter'] += task['stack_depth_counter']
                 result['otyrt']['elapsed'] += task['elapsed']
             elif task['type'] == 'STEAL':
                 result['steal']['stack_depth_counter'] += task['stack_depth_counter']
@@ -525,6 +534,7 @@ class Parser(object):
                                 'objects_scanned_counter': 0,
                                 'card_increment_counter': 0,
                                 'total_max_card_pointer_being_walked_through': 0,
+                                'stack_depth_counter': 0,
                             }
                         if references is None:
                             references = {
@@ -581,12 +591,14 @@ class Parser(object):
                             choosen_worker_entry['srt']['live'],
                             choosen_worker_entry['srt']['dead'],
                             choosen_worker_entry['srt']['total'],
+                            choosen_worker_entry['srt']['stack_depth_counter'],
                             choosen_worker_entry['srt']['elapsed'],
 
                             ## trt
                             choosen_worker_entry['trt']['live'],
                             choosen_worker_entry['trt']['dead'],
                             choosen_worker_entry['trt']['total'],
+                            choosen_worker_entry['trt']['stack_depth_counter'],
                             choosen_worker_entry['trt']['elapsed'],
 
                             ## otyrt
@@ -598,6 +610,7 @@ class Parser(object):
                             choosen_worker_entry['otyrt']['objects_scanned_counter'],
                             choosen_worker_entry['otyrt']['card_increment_counter'],
                             choosen_worker_entry['otyrt']['total_max_card_pointer_being_walked_through'],
+                            choosen_worker_entry['otyrt']['stack_depth_counter'],
                             choosen_worker_entry['otyrt']['elapsed'],
 
                             ## steal
