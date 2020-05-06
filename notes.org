@@ -12,6 +12,24 @@
 - References
 - StringTable
 - Prune
+* Parse
+** Errors
+- Old Gen Time
+
+* Anomalies
+** Check:
+- PostScavengeTime (flushing)
+-
+** Renaissance
+- 1861 -> GC time is absolutely high
+- 4527
+- 4509
+- 4897
+- 5174
+- 5468
+- 5721
+- 5878
+- 6176
 
 
 

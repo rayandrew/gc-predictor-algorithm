@@ -307,8 +307,6 @@ class Parser(object):
                 phases = None
                 parallel_workers = 0
 
-                need_full_gc = 0
-
                 old_gen_summary = None
                 old_gen_gc_time = 0.0
                 old_gen_heap = None

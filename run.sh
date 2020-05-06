@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+PYTHON="python"
+
 run_help() {
     echo "Available Commands: "
     echo "- help (this command)"
@@ -11,31 +13,31 @@ run_help() {
 }
 
 run_train() {
-    python gcpredictor/train.py "$@"
+    $PYTHON gcpredictor/train.py "$@"
 }
 
 run_train_all() {
     parallel=false; [ "$1" == "parallel" ] && parallel=true
     shift;
 
-    python gcpredictor/train.py "$@" -t nmethod
-    python gcpredictor/train.py "$@" -t srt
-    python gcpredictor/train.py "$@" -t trt
-    python gcpredictor/train.py "$@" -t otyrt
-    python gcpredictor/train.py "$@" -t references
-    python gcpredictor/train.py "$@" -t prune
+    $PYTHON gcpredictor/train.py "$@" -t nmethod
+    $PYTHON gcpredictor/train.py "$@" -t srt
+    $PYTHON gcpredictor/train.py "$@" -t trt
+    $PYTHON gcpredictor/train.py "$@" -t otyrt
+    $PYTHON gcpredictor/train.py "$@" -t references
+    $PYTHON gcpredictor/train.py "$@" -t prune
 
     if [ "$parallel" = true ] ; then
-        python gcpredictor/train.py "$@" -t steal
+        $PYTHON gcpredictor/train.py "$@" -t steal
     fi
 }
 
 run_parse() {
-    python gcpredictor/parse.py "$@"
+    $PYTHON gcpredictor/parse.py "$@"
 }
 
 run_inference() {
-    python gcpredictor/inference.py "$@"
+    $PYTHON gcpredictor/inference.py "$@"
 }
 
 
