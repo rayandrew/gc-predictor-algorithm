@@ -375,7 +375,9 @@ class Parser(object):
                             old_gen_gc_time = self.parse_trace_time(line, 'OldGenTime')
                         elif 'YoungGenTime' in line:
                             young_gen_gc_time = self.parse_trace_time(line, 'YoungGenTime')
-                        elif 'PreScavengeTime' in line or 'PostScavengeTime' in line:
+                        elif 'PreScavengeTime' in line \
+                             or 'PostScavengeTime' in line \
+                             or 'PruneScavengetime' in line:
                             pass
                         elif 'ScavengeTime' in line:
                             scavenge_time = self.parse_trace_time(line, 'ScavengeTime')
@@ -678,6 +680,8 @@ class Parser(object):
                         allocation_size = 0.0
                         phases = None
                         parallel_workers = 0
+
+                        scavenge_time = 0.0
 
                         need_full_gc = 0
 
