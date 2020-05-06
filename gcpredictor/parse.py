@@ -96,6 +96,7 @@ class Parser(object):
             # gen time
             'young_gen_gc_time',
             'old_gen_gc_time',
+            'scavenge_time',
 
             'gc_time_clean',
             'gc_time',
@@ -343,6 +344,8 @@ class Parser(object):
 
                 references = None
 
+                scavenge_time = 0.0
+
                 need_full_gc = False
 
                 nmethod = None
@@ -372,6 +375,8 @@ class Parser(object):
                             old_gen_gc_time = self.parse_trace_time(line, 'OldGenTime')
                         elif 'YoungGenTime' in line:
                             young_gen_gc_time = self.parse_trace_time(line, 'YoungGenTime')
+                        elif 'ScavengeTime' in line:
+                            scavenge_time = self.parse_trace_time(line, 'ScavengeTime')
                         elif 'Mem allocate size' in line:
                             allocation_size = self.parse_allocation_size(line)
                         elif 'Phase gc_id' in line:
@@ -657,7 +662,7 @@ class Parser(object):
                             # Gen time
                             young_gen_gc_time,
                             old_gen_gc_time,
-
+                            scavenge_time,
 
                             # Time
                             gc_time_clean,
