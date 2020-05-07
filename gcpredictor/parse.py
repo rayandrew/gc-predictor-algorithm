@@ -489,15 +489,16 @@ class Parser(object):
                             for worker in workers:
                                 if len(worker['tasks']) == 0:
                                     continue
+
                                 if choosen_worker is not None:
                                     # note: last task must be steal task
-                                    if choosen_worker['tasks'][-1]['type'] != 'STEAL':
+                                    if worker['tasks'][-1]['type'] != 'STEAL':
                                         continue
                                     if worker['tasks'][-1]['stack_depth_counter'] > \
                                        choosen_worker['tasks'][-1]['stack_depth_counter']:
                                         choosen_worker = worker
                                 else:
-                                    choosen_worker = worker
+                                    choosen_worker = worker if worker['tasks'][-1]['type'] == 'STEAL' else None
 
                             assert choosen_worker is not None, 'sanity'
                         else:
