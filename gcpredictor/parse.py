@@ -491,7 +491,8 @@ class Parser(object):
                                     continue
                                 if choosen_worker is not None:
                                     # note: last task must be steal task
-                                    assert choosen_worker['tasks'][-1]['type'] == 'STEAL'
+                                    if choosen_worker['tasks'][-1]['type'] != 'STEAL':
+                                        continue
                                     if worker['tasks'][-1]['stack_depth_counter'] > \
                                        choosen_worker['tasks'][-1]['stack_depth_counter']:
                                         choosen_worker = worker
