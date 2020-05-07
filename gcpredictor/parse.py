@@ -297,7 +297,6 @@ class Parser(object):
                 result['idle']['elapsed'] += task['elapsed']
         return result
 
-
     def parse(self, filename, output, parallel: bool = False):
         gc_counter = 0
         gc_counter_parsed = 0
@@ -488,8 +487,13 @@ class Parser(object):
                         if parallel:
                             choosen_worker = None
                             for worker in workers:
+                                if len(worker['tasks']) == 0:
+                                    continue
                                 if choosen_worker is not None:
-                                    if worker['task_count'] > choosen_worker['task_count']:
+                                    # note: last task must be steal task
+                                    assert choosen_worker['tasks'][-1]['type'] == 'STEAL'
+                                    if worker['tasks'][-1]['stack_depth_counter'] > \
+                                       choosen_worker['tasks'][-1]['stack_depth_counter']:
                                         choosen_worker = worker
                                 else:
                                     choosen_worker = worker
