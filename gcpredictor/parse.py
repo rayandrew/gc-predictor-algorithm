@@ -108,6 +108,16 @@ class Parser(object):
             'opush',
             'omax',
 
+            # parallel task terminator
+            'ptt_yields',
+            'ptt_spins',
+            'ptt_peeks',
+
+            # parallel task terminator global
+            'ptt_global_yields',
+            'ptt_global_spins',
+            'ptt_global_peeks',
+
             # gen time
             'young_gen_gc_time',
             'old_gen_gc_time',
@@ -753,6 +763,16 @@ class Parser(object):
                             worker_task_queue_stats[choosen_worker_stat_idx]['qsteal'],
                             worker_task_queue_stats[choosen_worker_stat_idx]['opush'],
                             worker_task_queue_stats[choosen_worker_stat_idx]['omax'],
+
+                            # parallel task terminator
+                            parallel_task_terminator['yields'],
+                            parallel_task_terminator['spins'],
+                            parallel_task_terminator['peeks'],
+
+                            # parallel task terminator global
+                            parallel_task_terminator_global['yields'],
+                            parallel_task_terminator_global['spins'],
+                            parallel_task_terminator_global['peeks'],
 
                             # Gen time
                             young_gen_gc_time,
