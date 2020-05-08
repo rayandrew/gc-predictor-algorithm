@@ -93,6 +93,21 @@ class Parser(object):
             'old_gen_heap_used',
             'old_gen_heap_free',
 
+            # local stats (most prominent)
+            'masked_pushes',
+            'masked_steals',
+            'arrays_chunked',
+            'array_chunks_processed',
+
+            # task queue stats (most prominent)
+            'qpush',
+            'qpop',
+            'qpops',
+            'qattempt',
+            'qsteal',
+            'opush',
+            'omax',
+
             # gen time
             'young_gen_gc_time',
             'old_gen_gc_time',
@@ -341,6 +356,12 @@ class Parser(object):
                 start_of_worker = False
                 end_of_worker = False
 
+                start_of_local_stats = False
+                end_of_local_stats = False
+
+                start_of_task_queue_stats = False
+                end_of_task_queue_stats = False
+
                 references = None
 
                 scavenge_time = 0.0
@@ -348,6 +369,12 @@ class Parser(object):
                 need_full_gc = False
 
                 nmethod = None
+
+                worker_local_stats = []
+                worker_task_queue_stats = []
+
+                parallel_task_terminator = {}
+                parallel_task_terminator_global = {}
 
                 workers = []
                 single_worker = {}
@@ -390,6 +417,10 @@ class Parser(object):
                             stringtable_time = self.parse_trace_time(line, 'StringTableTime')
                         elif 'StringTableInfo' in line:
                             stringtable_info = self.parse_stringtable_info(line)
+                        elif 'ParallelTaskTerminatorGlobal' in line:
+                            parallel_task_terminator_global = self.parse_line_summaries(line, 1)
+                        elif 'ParallelTaskTerminator' in line:
+                            parallel_task_terminator = self.parse_line_summaries(line, 1)
 
                         ### TODO changed this to serial or parallel
                         elif 'TraceCountRootOopClosureContainer: context=YoungGen' in line:
@@ -439,6 +470,34 @@ class Parser(object):
                             need_full_gc = self.parse_number(line, 'Need full gc') == 1
                         elif 'nmethod_epilogue' in line:
                             nmethod = self.parse_line_summaries(line, 2)
+                        elif 'Start of TaskQueueStats' in line:
+                            start_of_task_queue_stats = True
+                            end_of_task_queue_stats = False
+                        elif 'End of TaskQueueStats' in line:
+                            start_of_task_queue_stats = False
+                            end_of_task_queue_stats = True
+                        elif 'Start of TaskQueueLocalStats' in line:
+                            start_of_local_stats = True
+                            end_of_local_stats = False
+                        elif 'End of TaskQueueLocalStats' in line:
+                            start_of_local_stats = False
+                            end_of_local_stats = True
+
+                        # parse local stats
+                        if start_of_local_stats and not end_of_local_stats:
+                            if 'Start of TaskQueueLocalStats' in line:
+                                pass # noop
+                            elif 'TaskQueueLocalStats' in line:
+                                local_stats = self.parse_line_summaries(line, 1)
+                                worker_local_stats.append(local_stats)
+
+                        # parse task queue stats
+                        if start_of_task_queue_stats and not end_of_task_queue_stats:
+                            if 'Start of TaskQueueStats' in line:
+                                pass # noop
+                            elif 'TaskQueueStats' in line:
+                                task_queue_stats = self.parse_line_summaries(line, 1)
+                                worker_task_queue_stats.append(task_queue_stats)
 
                         # parse worker tracker
                         if start_of_worker and not end_of_worker:
@@ -482,7 +541,10 @@ class Parser(object):
                             continue
                         if len(workers) == 0:
                             continue
+
                         assert parallel_workers == len(workers), 'sanity'
+                        # assert len(workers) == len(worker_local_stats), 'sanity'
+                        # assert len(workers) == len(worker_task_queue_stats), 'sanity'
 
                         if parallel:
                             choosen_worker = None
@@ -505,6 +567,14 @@ class Parser(object):
                             choosen_worker = workers[0]
 
                         choosen_worker_entry = self.process_choosen_worker(choosen_worker)
+
+                        choosen_worker_stat_idx = 0
+
+                        if parallel:
+                            for stat_idx in range(1, len(worker_local_stats)):
+                                if worker_task_queue_stats[choosen_worker_stat_idx]['qpush'] \
+                                   < worker_task_queue_stats[stat_idx]['qpush']:
+                                    choosen_worker_stat_idx = stat_idx
 
                         if young_gen_summary is None:
                             young_gen_summary = {
@@ -669,6 +739,21 @@ class Parser(object):
                             old_gen_heap['used'],
                             old_gen_heap['free'],
 
+                            # local stats
+                            worker_local_stats[choosen_worker_stat_idx]['masked_pushes'],
+                            worker_local_stats[choosen_worker_stat_idx]['masked_steals'],
+                            worker_local_stats[choosen_worker_stat_idx]['arrays_chunked'],
+                            worker_local_stats[choosen_worker_stat_idx]['array_chunks_processed'],
+                       
+                            # task queue stats
+                            worker_task_queue_stats[choosen_worker_stat_idx]['qpush'],
+                            worker_task_queue_stats[choosen_worker_stat_idx]['qpop'],
+                            worker_task_queue_stats[choosen_worker_stat_idx]['qpops'],
+                            worker_task_queue_stats[choosen_worker_stat_idx]['qattempt'],
+                            worker_task_queue_stats[choosen_worker_stat_idx]['qsteal'],
+                            worker_task_queue_stats[choosen_worker_stat_idx]['opush'],
+                            worker_task_queue_stats[choosen_worker_stat_idx]['omax'],
+
                             # Gen time
                             young_gen_gc_time,
                             old_gen_gc_time,
@@ -721,6 +806,15 @@ class Parser(object):
 
                         start_of_worker = False
                         end_of_worker = False
+
+                        start_of_local_stats = False
+                        end_of_local_stats = False
+                        worker_local_stats = []
+
+                        start_of_task_queue_stats = False
+                        end_of_task_queue_stats = False
+                        worker_task_queue_stats = []
+
                         workers = []
                         single_worker = {}
 
