@@ -583,7 +583,7 @@ class Parser(object):
                                         choosen_worker_entry = self.process_choosen_worker(choosen_worker)
                                 else:
                                     choosen_worker = worker if worker['tasks'][-1]['type'] == 'STEAL' else None
-                                    choosen_worker_entry = self.process_choosen_worker(choosen_worker)
+                                    choosen_worker_entry =  None if chosen_worker is None else self.process_choosen_worker(choosen_worker)
 
                             assert choosen_worker is not None, 'sanity'
                         else:
