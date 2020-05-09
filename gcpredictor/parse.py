@@ -20,7 +20,8 @@ class Parser(object):
             'phases',
             'parallel_workers',
             'need_full_gc',
-
+            'total_threads', # includes java threads
+           
             # nmethod
             'nmethod_epilogue_count',
             'nmethod_epilogue_elapsed',
@@ -386,6 +387,8 @@ class Parser(object):
                 parallel_task_terminator = {}
                 parallel_task_terminator_global = {}
 
+                total_threads = 0
+
                 workers = []
                 single_worker = {}
 
@@ -492,6 +495,9 @@ class Parser(object):
                         elif 'End of TaskQueueLocalStats' in line:
                             start_of_local_stats = False
                             end_of_local_stats = True
+                        elif 'Num of threads' in line:
+                            splitted_line = line.split('=')
+                            total_threads = int(splitted_line[1])
 
                         # parse local stats
                         if start_of_local_stats and not end_of_local_stats:
@@ -558,25 +564,31 @@ class Parser(object):
 
                         if parallel:
                             choosen_worker = None
+                            choosen_worker_entry = None
                             for worker in workers:
                                 if len(worker['tasks']) == 0:
                                     continue
 
                                 if choosen_worker is not None:
                                     # note: last task must be steal task
-                                    if worker['tasks'][-1]['type'] != 'STEAL':
-                                        continue
-                                    if worker['tasks'][-1]['stack_depth_counter'] > \
-                                       choosen_worker['tasks'][-1]['stack_depth_counter']:
+                                    # if worker['tasks'][-1]['type'] != 'STEAL':
+                                    #     continue
+                                    # if worker['tasks'][-1]['stack_depth_counter'] > \
+                                    #    choosen_worker['tasks'][-1]['stack_depth_counter']:
+                                    #     choosen_worker = worker
+                                    current_worker_entry = self.process_choosen_worker(worker)
+                                    if current_worker_entry['trt']['elapsed'] \
+                                       > choosen_worker_entry['trt']['elapsed']:
                                         choosen_worker = worker
+                                        choosen_worker_entry = self.process_choosen_worker(choosen_worker)
                                 else:
                                     choosen_worker = worker if worker['tasks'][-1]['type'] == 'STEAL' else None
+                                    choosen_worker_entry = self.process_choosen_worker(choosen_worker)
 
                             assert choosen_worker is not None, 'sanity'
                         else:
                             choosen_worker = workers[0]
-
-                        choosen_worker_entry = self.process_choosen_worker(choosen_worker)
+                            choosen_worker_entry = self.process_choosen_worker(choosen_worker)
 
                         choosen_worker_stat_idx = 0
 
@@ -676,6 +688,7 @@ class Parser(object):
                             phases,
                             parallel_workers,
                             need_full_gc,
+                            total_threads,
 
                             # nmethod
                             nmethod['count'],
@@ -834,6 +847,8 @@ class Parser(object):
                         start_of_task_queue_stats = False
                         end_of_task_queue_stats = False
                         worker_task_queue_stats = []
+
+                        total_threads = 0
 
                         workers = []
                         single_worker = {}

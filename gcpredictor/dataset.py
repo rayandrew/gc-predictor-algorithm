@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.pipeline import Pipeline, make_pipeline, FeatureUnion
 
 from gcpredictor.transformers import ColumnSelector, \
-    Identity, PandasQuery, PandasFeatureUnion
+    Identity, PandasQuery, PandasFeatureUnion, PandasTransform
 import gcpredictor.utilities as utilities
 
 SRT_COL = [
@@ -12,7 +12,7 @@ SRT_COL = [
 ]
 
 TRT_COL = [
-    'trt_total',
+    'trt_stack_depth_counter',
     'trt_elapsed',
 ]
 
@@ -27,7 +27,7 @@ NMETHOD_COL = [
 ]
 
 STEAL_COL = [
-    'steal_stack_depth_counter',
+    # 'steal_stack_depth_counter',
     'steal_elapsed',
 ]
 
@@ -54,6 +54,17 @@ PRUNE_COL = [
     'prune_elapsed',
 ]
 
+PTT_COL = [
+    # 'ptt_yields',
+    # 'steal_stack_depth_counter',
+    #
+    'young_gen_heap_used',
+    # 'old_gen_heap_used',
+    'ptt_spins',
+    'ptt_peeks',
+    'gc_time'
+]
+
 TARGET_COL = [
     'gc_time',
 ]
@@ -65,7 +76,7 @@ def get_inference_preprocess_pipeline():
     preprocess_pipeline = make_pipeline(
         PandasQuery('need_full_gc == False'),
         PandasFeatureUnion([
-            ("gc_id", make_pipeline(
+            ('gc_id', make_pipeline(
                 ColumnSelector(columns=['gc_id']),
                 Identity(),
             )),
@@ -112,6 +123,10 @@ def get_inference_preprocess_pipeline():
             ("need_full_gc", make_pipeline(
                 ColumnSelector(columns=['need_full_gc']),
                 Identity(),
+            )),
+            ("ptt", make_pipeline(
+                ColumnSelector(columns=remove_last_col(PTT_COL)),
+                # PandasTransform(lambda df: df.sum(axis=1)),
             )),
             ("target", make_pipeline(
                 ColumnSelector(columns=TARGET_COL),
@@ -202,6 +217,15 @@ def get_train_preprocess_pipeline(train_type: str, query: Union[str, None] = Non
         specific_data_pipeline = [
             ("prune", make_pipeline(
                 ColumnSelector(columns=remove_last_col(PRUNE_COL)),
+                Identity(),
+            )),
+        ]
+    elif train_type == 'ptt':
+        target_col = PTT_COL[-1]
+        specific_data_pipeline = [
+            ("ptt", make_pipeline(
+                ColumnSelector(columns=remove_last_col(PTT_COL)),
+                # PandasTransform(lambda df: df.sum(axis=1)),
                 Identity(),
             )),
         ]

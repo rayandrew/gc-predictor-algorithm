@@ -22,6 +22,7 @@ class TrainType(Enum):
     references = 'references'
     stringtable = 'stringtable'
     prune = 'prune'
+    ptt = 'ptt'
 
     def __str__(self):
         return self.value
@@ -85,18 +86,19 @@ def generate_schema(task: Task):
                         'enum': ['ransac', 'lreg', 'svr', 'sm']
                     },
                     'minItems': 1,
-                    'maxItems': 3,
+                    'maxItems': 4,
                     'additionalItems': False,
                 },
                 'data': {
                     'type': 'object',
                     'properties': {
-                        'srt': data_schema,
-                        'trt': data_schema,
-                        'otyrt': data_schema,
-                        'references': data_schema,
-                        'stringtable': data_schema,
-                        'prune': data_schema,
+                        'ptt': data_schema,
+                        # 'srt': data_schema,
+                        # 'trt': data_schema,
+                        # 'otyrt': data_schema,
+                        # 'references': data_schema,
+                        # 'stringtable': data_schema,
+                        # 'prune': data_schema,
                     },
                 },
             },
@@ -148,10 +150,11 @@ def generate_schema(task: Task):
             'models': {
                 'type': 'object',
                 'properties': {
-                    'main': inference_model_schema,
-                    'stringtable': inference_model_schema,
-                    'prune': inference_model_schema,
-                    'otyrt': inference_model_schema,
+                    'ptt': inference_model_schema,
+                    # 'main': inference_model_schema,
+                    # 'stringtable': inference_model_schema,
+                    # 'prune': inference_model_schema,
+                    # 'otyrt': inference_model_schema,
                 }
             },
             'data': inference_data_schema,

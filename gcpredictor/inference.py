@@ -14,25 +14,29 @@ from gcpredictor.config import load_config, Task
 from gcpredictor.model import save_diff
 from gcpredictor.dataset import prepare_inference_dataset, \
     remove_last_col, \
-    NMETHOD_COL, \
-    SRT_COL, \
-    TRT_COL, \
-    OTYRT_COL, \
-    REFERENCES_COL, \
-    STRINGTABLE_COL, \
-    PRUNE_COL, \
+    PTT_COL, \
     TARGET_COL
+    # NMETHOD_COL, \
+    # SRT_COL, \
+    # TRT_COL, \
+    # OTYRT_COL, \
+    # REFERENCES_COL, \
+    # STRINGTABLE_COL, \
+    # PRUNE_COL, \
+    # TARGET_COL
 import gcpredictor.utilities as utilities
 
 
 FEATS = {
-    'nmethod': remove_last_col(NMETHOD_COL),
-    'srt': remove_last_col(SRT_COL),
-    'trt': remove_last_col(TRT_COL),
-    'otyrt': remove_last_col(OTYRT_COL),
-    'prune': remove_last_col(PRUNE_COL),
-    'stringtable': remove_last_col(STRINGTABLE_COL),
-    'references': remove_last_col(REFERENCES_COL),
+    # 'ptt': [0],
+    'ptt': remove_last_col(PTT_COL),
+    # 'nmethod': remove_last_col(NMETHOD_COL),
+    # 'srt': remove_last_col(SRT_COL),
+    # 'trt': remove_last_col(TRT_COL),
+    # 'otyrt': remove_last_col(OTYRT_COL),
+    # 'prune': remove_last_col(PRUNE_COL),
+    # 'stringtable': remove_last_col(STRINGTABLE_COL),
+    # 'references': remove_last_col(REFERENCES_COL),
 }
 
 PREDICTORS = {} # cache
@@ -44,9 +48,9 @@ def generate_predictions(idx: int, config: dict, dataset: pd.DataFrame):
     if idx in PREDICTIONS:
         return PREDICTIONS[idx]
     else:
-        if config['parallel']:
-            from gcpredictor.dataset import STEAL_COL
-            FEATS['steal'] = remove_last_col(STEAL_COL)
+        # if config['parallel']:
+        #     from gcpredictor.dataset import STEAL_COL
+        #     FEATS['steal'] = remove_last_col(STEAL_COL)
 
         PREDICTORS[idx] = {}
         RESULT[idx] = {}
