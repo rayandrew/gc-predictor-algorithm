@@ -99,6 +99,8 @@ class Parser(object):
             'masked_steals',
             'arrays_chunked',
             'array_chunks_processed',
+            'copied',
+            'tenured',
 
             # task queue stats (most prominent)
             'qpush',
@@ -593,10 +595,17 @@ class Parser(object):
                         choosen_worker_stat_idx = 0
 
                         if parallel:
+                            def calculate_total(stat):
+                                return stat['copied'] + stat['tenured']
+                            choosen_total = calculate_total(worker_local_stats[choosen_worker_stat_idx])
                             for stat_idx in range(1, len(worker_local_stats)):
-                                if worker_task_queue_stats[choosen_worker_stat_idx]['qpush'] \
-                                   < worker_task_queue_stats[stat_idx]['qpush']:
+                                current_total = worker_local_stats[stat_idx]
+                                if choosen_total < current_total:
+                                    choosen_total = current_total
                                     choosen_worker_stat_idx = stat_idx
+                                # if worker_task_queue_stats[choosen_worker_stat_idx]['qpush'] \
+                                #    < worker_task_queue_stats[stat_idx]['qpush']:
+                                #     choosen_worker_stat_idx = stat_idx
 
                         if young_gen_summary is None:
                             young_gen_summary = {
@@ -767,6 +776,8 @@ class Parser(object):
                             worker_local_stats[choosen_worker_stat_idx]['masked_steals'],
                             worker_local_stats[choosen_worker_stat_idx]['arrays_chunked'],
                             worker_local_stats[choosen_worker_stat_idx]['array_chunks_processed'],
+                            worker_local_stats[choosen_worker_stat_idx]['copied'],
+                            worker_local_stats[choosen_worker_stat_idx]['tenured'],
                        
                             # task queue stats
                             worker_task_queue_stats[choosen_worker_stat_idx]['qpush'],
