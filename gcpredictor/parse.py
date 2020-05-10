@@ -599,7 +599,7 @@ class Parser(object):
                                 return stat['copied'] + stat['tenured']
                             choosen_total = calculate_total(worker_local_stats[choosen_worker_stat_idx])
                             for stat_idx in range(1, len(worker_local_stats)):
-                                current_total = worker_local_stats[stat_idx]
+                                current_total = calculate_total(worker_local_stats[stat_idx])
                                 if choosen_total < current_total:
                                     choosen_total = current_total
                                     choosen_worker_stat_idx = stat_idx
