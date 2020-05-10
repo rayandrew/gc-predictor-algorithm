@@ -101,6 +101,8 @@ class Parser(object):
             'array_chunks_processed',
             'copied',
             'tenured',
+            'total_copied',
+            'total_tenured',
 
             # task queue stats (most prominent)
             'qpush',
@@ -389,6 +391,9 @@ class Parser(object):
                 parallel_task_terminator = {}
                 parallel_task_terminator_global = {}
 
+                total_copied = 0
+                total_tenured = 0
+
                 total_threads = 0
 
                 workers = []
@@ -597,8 +602,12 @@ class Parser(object):
                         if parallel:
                             def calculate_total(stat):
                                 return stat['copied'] + stat['tenured']
+                            total_copied = worker_local_stats[choosen_worker_stat_idx]['copied']
+                            total_tenured = worker_local_stats[choosen_worker_stat_idx]['tenured']
                             choosen_total = calculate_total(worker_local_stats[choosen_worker_stat_idx])
                             for stat_idx in range(1, len(worker_local_stats)):
+                                total_copied += worker_local_stats[stat_idx]['copied']
+                                total_tenured += worker_local_stats[stat_idx]['tenured']
                                 current_total = calculate_total(worker_local_stats[stat_idx])
                                 if choosen_total < current_total:
                                     choosen_total = current_total
@@ -778,6 +787,8 @@ class Parser(object):
                             worker_local_stats[choosen_worker_stat_idx]['array_chunks_processed'],
                             worker_local_stats[choosen_worker_stat_idx]['copied'],
                             worker_local_stats[choosen_worker_stat_idx]['tenured'],
+                            total_copied,
+                            total_tenured,
                        
                             # task queue stats
                             worker_task_queue_stats[choosen_worker_stat_idx]['qpush'],
@@ -859,6 +870,8 @@ class Parser(object):
                         end_of_task_queue_stats = False
                         worker_task_queue_stats = []
 
+                        total_copied = 0
+                        total_tenured = 0
                         total_threads = 0
 
                         workers = []
