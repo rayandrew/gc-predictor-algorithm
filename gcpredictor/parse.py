@@ -101,8 +101,10 @@ class Parser(object):
             'array_chunks_processed',
             'copied',
             'tenured',
-            'total_copied',
-            'total_tenured',
+            'worker_sum_copied',
+            'worker_total_tenured',
+            'estimated_copied',
+            'estimated_tenured',
 
             # task queue stats (most prominent)
             'qpush',
@@ -122,6 +124,14 @@ class Parser(object):
             'ptt_global_yields',
             'ptt_global_spins',
             'ptt_global_peeks',
+
+            # ps promotion info
+            'copy_rate',
+            'tenure_rate',
+            'current_gc_copied',
+            'current_gc_tenured',
+            'global_total_copied',
+            'global_total_tenured',
 
             # gen time
             'young_gen_gc_time',
@@ -399,6 +409,8 @@ class Parser(object):
                 workers = []
                 single_worker = {}
 
+                pspromotion_info = None
+
                 while line:
                     worker_start = re.findall(r'^\[WorkerTracker:(.*)start\]$', line)
                     # [YoungGen size, capacity=1388314624B used=1372782672B free=1000B]
@@ -505,6 +517,8 @@ class Parser(object):
                         elif 'Num of threads' in line:
                             splitted_line = line.split('=')
                             total_threads = int(splitted_line[1])
+                        elif 'PSPromotionManagerInfo' in line:
+                            pspromotion_info = self.parse_line_summaries(line, 1)
 
                         # parse local stats
                         if start_of_local_stats and not end_of_local_stats:
@@ -681,6 +695,16 @@ class Parser(object):
                                 'elapsed': 0.0,
                             }
 
+                        if pspromotion_info is None:
+                            pspromotion_info = {
+                                'copying_rate': 0,
+                                'tenuring_rate': 0,
+                                'total_copied': 0,
+                                'global_total_copied': 0,
+                                'total_tenured': 0,
+                                'global_total_tenured': 0,
+                            }
+
                         gc_time_clean = 0
 
                         if parallel:
@@ -789,6 +813,8 @@ class Parser(object):
                             worker_local_stats[choosen_worker_stat_idx]['tenured'],
                             total_copied,
                             total_tenured,
+                            worker_local_stats[choosen_worker_stat_idx]['estimated_copied'],
+                            worker_local_stats[choosen_worker_stat_idx]['estimated_tenured'],
                        
                             # task queue stats
                             worker_task_queue_stats[choosen_worker_stat_idx]['qpush'],
@@ -808,6 +834,14 @@ class Parser(object):
                             parallel_task_terminator_global['yields'],
                             parallel_task_terminator_global['spins'],
                             parallel_task_terminator_global['peeks'],
+
+                            # ps promotion info
+                            pspromotion_info['copying_rate'],
+                            pspromotion_info['tenuring_rate'],
+                            pspromotion_info['total_copied'],
+                            pspromotion_info['total_tenured'],
+                            pspromotion_info['global_total_copied'],
+                            pspromotion_info['global_total_tenured'],
 
                             # Gen time
                             young_gen_gc_time,
@@ -876,6 +910,8 @@ class Parser(object):
 
                         workers = []
                         single_worker = {}
+
+                        pspromotion_info = None
 
                 csv_file.close()
             log_file.close()
