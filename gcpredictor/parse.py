@@ -153,6 +153,8 @@ class Parser(object):
             time = float(line[:-2]) * 1
         elif 's' in line:
             time = float(line[:-1]) * 1000
+        if 'us' in line:
+            time = float(line[:-2]) / 1000
         return time
 
     def convert_size(self, line: str):
@@ -175,7 +177,11 @@ class Parser(object):
             key, value, *rest = info.split('=')
             assert(len(rest) == 0)
             value = value.replace(']', '')
-            if key == 'elapsed' or key == 'elapsed_time' or 'elapsed' in key or 'time' in key:
+            if key == 'elapsed' \
+               or key == 'elapsed_time' \
+               or 'elapsed' in key \
+               or 'time' in key \
+               or 'estimated' in key:
                 result[key] = self.convert_time(value)
             else:
                 try:
