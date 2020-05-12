@@ -151,10 +151,10 @@ class Parser(object):
         time = 0.0
         if 'ms' in line:
             time = float(line[:-2]) * 1
+        elif 'us' in line:
+            time = float(line[:-2]) / 1000
         elif 's' in line:
             time = float(line[:-1]) * 1000
-        if 'us' in line:
-            time = float(line[:-2]) / 1000
         return time
 
     def convert_size(self, line: str):
