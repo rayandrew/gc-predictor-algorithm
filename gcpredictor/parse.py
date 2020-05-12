@@ -101,6 +101,8 @@ class Parser(object):
             'array_chunks_processed',
             'copied',
             'tenured',
+            'copied_in_words',
+            'tenured_in_words',
             'worker_sum_copied',
             'worker_total_tenured',
             'estimated_copied',
@@ -132,8 +134,12 @@ class Parser(object):
             'tenure_rate',
             'current_gc_copied',
             'current_gc_tenured',
+            'current_gc_copied_in_words',
+            'current_gc_tenured_in_words',
             'global_total_copied',
             'global_total_tenured',
+            'global_total_copied_in_words',
+            'global_total_tenured_in_words',
 
             # gen time
             'young_gen_gc_time',
@@ -823,6 +829,8 @@ class Parser(object):
                             worker_local_stats[choosen_worker_stat_idx]['array_chunks_processed'],
                             worker_local_stats[choosen_worker_stat_idx]['copied'],
                             worker_local_stats[choosen_worker_stat_idx]['tenured'],
+                            worker_local_stats[choosen_worker_stat_idx]['copied_in_words'],
+                            worker_local_stats[choosen_worker_stat_idx]['tenured_in_words'],
                             total_copied,
                             total_tenured,
                             worker_local_stats[choosen_worker_stat_idx]['estimated_copied'],
@@ -854,8 +862,12 @@ class Parser(object):
                             pspromotion_info['tenuring_rate'],
                             pspromotion_info['total_copied'],
                             pspromotion_info['total_tenured'],
+                            pspromotion_info['total_copied_in_words'],
+                            pspromotion_info['total_tenured_in_words'],
                             pspromotion_info['global_total_copied'],
                             pspromotion_info['global_total_tenured'],
+                            pspromotion_info['global_total_copied_in_words'],
+                            pspromotion_info['global_total_tenured_in_words'],
 
                             # Gen time
                             young_gen_gc_time,
