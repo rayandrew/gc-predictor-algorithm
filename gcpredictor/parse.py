@@ -105,6 +105,8 @@ class Parser(object):
             'worker_total_tenured',
             'estimated_copied',
             'estimated_tenured',
+            'total_estimated_copied',
+            'total_estimated_tenured',
 
             # task queue stats (most prominent)
             'qpush',
@@ -624,10 +626,14 @@ class Parser(object):
                                 return stat['copied'] + stat['tenured']
                             total_copied = worker_local_stats[choosen_worker_stat_idx]['copied']
                             total_tenured = worker_local_stats[choosen_worker_stat_idx]['tenured']
+                            total_estimated_copied = worker_local_stats[choosen_worker_stat_idx]['estimated_copied']
+                            total_estimated_tenured = worker_local_stats[choosen_worker_stat_idx]['estimated_tenured']
                             choosen_total = calculate_total(worker_local_stats[choosen_worker_stat_idx])
                             for stat_idx in range(1, len(worker_local_stats)):
                                 total_copied += worker_local_stats[stat_idx]['copied']
                                 total_tenured += worker_local_stats[stat_idx]['tenured']
+                                total_estimated_copied += worker_local_stats[stat_idx]['estimated_copied']
+                                total_estimated_tenured += worker_local_stats[stat_idx]['estimated_tenured']
                                 current_total = calculate_total(worker_local_stats[stat_idx])
                                 if choosen_total < current_total:
                                     choosen_total = current_total
@@ -821,6 +827,8 @@ class Parser(object):
                             total_tenured,
                             worker_local_stats[choosen_worker_stat_idx]['estimated_copied'],
                             worker_local_stats[choosen_worker_stat_idx]['estimated_tenured'],
+                            total_estimated_copied,
+                            total_estimated_tenured,
                        
                             # task queue stats
                             worker_task_queue_stats[choosen_worker_stat_idx]['qpush'],
