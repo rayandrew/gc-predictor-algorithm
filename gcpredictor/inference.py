@@ -42,6 +42,7 @@ FEATS = {
 PREDICTORS = {} # cache
 RESULT = {}
 PREDICTIONS = {}
+PREDICTION_COL = 'prediction'
 
 def generate_predictions(idx: int, config: dict, dataset: pd.DataFrame):
     global FEATS, PREDICTIONS, PREDICTORS
@@ -78,8 +79,9 @@ def test_predictor(idx: int, config: dict, dataset: pd.DataFrame):
     from sklearn.metrics import mean_squared_error, r2_score
     y = dataset[TARGET_COL[0]]
     y_pred = generate_predictions(idx, config, dataset)
-    np.savetxt('./results/{}/inference/y_{}.txt'.format(config['name'], idx), y.values)
-    np.savetxt('./results/{}/inference/y_pred_{}.txt'.format(config['name'], idx), y_pred)
+    # np.savetxt('./results/{}/inference/y_{}.txt'.format(config['name'], idx), y.values)
+    # np.savetxt('./results/{}/inference/y_pred_{}.txt'.format(config['name'], idx), y_pred)
+    dataset[PREDICTION_COL] = y_pred
     mse = mean_squared_error(y, y_pred)
     r2 = r2_score(y, y_pred)
     print('Mean squared error: %.8f' % mse)
@@ -199,11 +201,14 @@ def main(args):
     cdf_dir = '{}/cdf'.format(output_dir)
     gnuplot_dir = '{}/gnuplot'.format(output_dir)
     plot_dir = '{}/plot'.format(output_dir)
+    data_dir = '{}/data'.format(output_dir)
     
     utilities.create_dir(cdf_dir)
     utilities.create_dir(gnuplot_dir)
     utilities.create_dir(plot_dir)
-    
+    utilities.create_dir(data_dir)
+
+
     pbar = tqdm(range(len(datasets)))
     for idx in pbar:
         name = config['data'][idx]['name']
@@ -220,7 +225,7 @@ def main(args):
                                    cdf_dir,
                                    config['data'][idx]['name'],
                                    diff)
-        pbar.set_description('Creating plot for database {} prediction'.format(name))
+        pbar.set_description('Creating plot for dataset {} prediction'.format(name))
         save_plot(config['model'],
                   config['data'][idx],
                   cdf_dir,
@@ -228,6 +233,10 @@ def main(args):
                   plot_dir,
                   diff,
                   sorted_indexes)
+
+        pbar.set_description('Saving data for dataset {} prediction'.format(name))
+        # dataset =  datasets[idx].loc[:, ~datasets[idx].columns.str.contains('^Unnamed')]
+        datasets[idx][PTT_COL + [PREDICTION_COL]].to_csv('{}/{}.csv'.format(data_dir, name), index=False)
 
     print('Saving combined plot')
     save_plots(config, cdf_dir, gnuplot_dir, plot_dir)

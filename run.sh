@@ -22,16 +22,20 @@ run_train_all() {
     parallel=false; [ "$1" == "parallel" ] && parallel=true
     shift;
 
-    $PYTHON gcpredictor/train.py "$@" -t nmethod
-    $PYTHON gcpredictor/train.py "$@" -t srt
-    $PYTHON gcpredictor/train.py "$@" -t trt
-    $PYTHON gcpredictor/train.py "$@" -t otyrt
-    $PYTHON gcpredictor/train.py "$@" -t references
-    $PYTHON gcpredictor/train.py "$@" -t prune
+    echo "parallel = $parallel"
 
-    if [ "$parallel" = true ] ; then
-        $PYTHON gcpredictor/train.py "$@" -t steal
-    fi
+    $PYTHON gcpredictor/train.py "$@" -t ptt
+    # $PYTHON gcpredictor/train.py "$@" -t trt
+
+    # $PYTHON gcpredictor/train.py "$@" -t nmethod
+    # $PYTHON gcpredictor/train.py "$@" -t srt
+    # $PYTHON gcpredictor/train.py "$@" -t otyrt
+    # $PYTHON gcpredictor/train.py "$@" -t references
+    # $PYTHON gcpredictor/train.py "$@" -t prune
+
+    # if [ "$parallel" = true ] ; then
+    #     $PYTHON gcpredictor/train.py "$@" -t steal
+    # fi
 }
 
 run_parse() {

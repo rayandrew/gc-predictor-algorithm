@@ -58,10 +58,12 @@ PTT_COL = [
     # 'ptt_yields',
     # 'steal_stack_depth_counter',
     #
-    'young_gen_heap_used',
+    # 'young_gen_heap_used',
     # 'old_gen_heap_used',
-    'ptt_spins',
+    # 'ptt_spins',
     'ptt_peeks',
+    'total_copied',
+    'total_tenured',
     'gc_time'
 ]
 
